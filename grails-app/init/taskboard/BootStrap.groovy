@@ -6,6 +6,7 @@ import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder
 class BootStrap {
     def init = { servletContext ->
         seedUsers()
+        seedUrgencyConfig()
     }
 
     @Transactional
@@ -14,6 +15,13 @@ class BootStrap {
             def encoder = new BCryptPasswordEncoder()
             new User(username: 'lars', password: encoder.encode('changeme'),
                 displayName: 'Lars', apiToken: UUID.randomUUID().toString()).save(flush: true)
+        }
+    }
+
+    @Transactional
+    void seedUrgencyConfig() {
+        if (!UrgencyConfig.count()) {
+            new UrgencyConfig().save(flush: true)
         }
     }
 
