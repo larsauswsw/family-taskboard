@@ -10,7 +10,7 @@ class UrlMappings {
             }
         }
 
-        "/"(view:"/index")
+        "/"(controller: 'task', action: 'index')
         "500"(view:'/error')
         "404"(view:'/notFound')
     }
