@@ -3,6 +3,8 @@ package taskboard
 class UrlMappings {
 
     static mappings = {
+        post "/api/tasks/quick"(controller: 'apiTask', action: 'quick')
+
         "/$namespace/$controller/$action?/$id?(.$format)?" {}
         "/$controller/$action?/$id?(.$format)?"{
             constraints {
