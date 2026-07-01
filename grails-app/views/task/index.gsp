@@ -26,5 +26,6 @@
         if (m) e.detail.headers['X-XSRF-TOKEN'] = decodeURIComponent(m[1]);
     });
     </script>
+    <asset:javascript src="voice.js"/>
 </body>
 </html>
