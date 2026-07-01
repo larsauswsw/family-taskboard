@@ -1,0 +1,6 @@
+.superpowers/
+.gradle/
+build/
+*.log
+.env
+out/
