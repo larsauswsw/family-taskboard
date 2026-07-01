@@ -15,8 +15,10 @@ class UrgencyService {
         long rawDays = ChronoUnit.DAYS.between(today, task.dueDate)
         if (rawDays < 0) return 'darkred'
         double eff = effectiveDays(task, today)
-        if (eff > cfg.greenDaysThreshold) return 'green'
-        if (eff > cfg.yellowDaysThreshold) return 'yellow'
+        // Thresholds are inclusive lower bounds (>=) consistently across all bands,
+        // e.g. eff exactly at orangeDaysThreshold still counts as orange, not red.
+        if (eff >= cfg.greenDaysThreshold) return 'green'
+        if (eff >= cfg.yellowDaysThreshold) return 'yellow'
         if (eff >= cfg.orangeDaysThreshold) return 'orange'
         return 'red'
     }
