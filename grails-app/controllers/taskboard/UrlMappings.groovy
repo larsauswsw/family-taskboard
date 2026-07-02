@@ -9,12 +9,21 @@ class UrlMappings {
 
         // Web Push routes -- also must precede the catch-all for the same reason
         // (it would otherwise parse "/push/key" as controller='push', action='key'
-        // anyway by coincidence, but "/sw.js" needs the explicit uri-forward mapping
-        // since it isn't a controller action at all -- it's a static file in
-        // src/main/webapp/sw.js).
+        // anyway by coincidence). /sw.js and /manifest.json are static files
+        // under src/main/resources/static/, served by Spring Boot's default
+        // static-resource handler -- but Grails' generic catch-all mapping below
+        // would otherwise parse "/manifest.json" as controller='manifest',
+        // format='json' and short-circuit with its own 404 before Spring's
+        // resource handler gets a chance. Forwarding to a *different* uri
+        // (the classpath-relative /static/... path) avoids both problems: it
+        // takes precedence over the catch-all, and (unlike forwarding a path to
+        // itself, which recurses infinitely -- see git history) it lands on a
+        // path no UrlMappings entry claims, so it falls through to Spring's
+        // static handler.
+        "/sw.js"(uri: '/static/sw.js')
+        "/manifest.json"(uri: '/static/manifest.json')
         "/push/key"(controller: 'push', action: 'key')
         post "/push/subscribe"(controller: 'push', action: 'subscribe')
-        "/sw.js"(uri: '/sw.js')
 
         "/$namespace/$controller/$action?/$id?(.$format)?" {}
         "/$controller/$action?/$id?(.$format)?"{

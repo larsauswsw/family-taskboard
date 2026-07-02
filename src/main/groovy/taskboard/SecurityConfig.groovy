@@ -56,7 +56,11 @@ class SecurityConfig {
         http
             .authenticationProvider(authenticationProvider)
             .authorizeHttpRequests { auth ->
-                auth.requestMatchers('/assets/**', '/manifest.json', '/sw.js', '/error',
+                // /manifest.json and /sw.js are UrlMappings uri-forwards to
+                // /static/**  (see UrlMappings.groovy); the forward re-enters this
+                // filter chain with the forwarded path, so /static/** must be
+                // permitted too or the forwarded request gets redirected to login.
+                auth.requestMatchers('/assets/**', '/static/**', '/manifest.json', '/sw.js', '/error',
                                      '/login/**', '/logout/**', '/api/**').permitAll()
                 auth.anyRequest().authenticated()
             }
