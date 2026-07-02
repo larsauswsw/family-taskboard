@@ -57,6 +57,16 @@ hibernate:
         queries: false
         use_second_level_cache: false
 
+vapid:
+    # Default keypair below is a real, valid EC P-256 VAPID keypair generated for
+    # this project (via `npx web-push generate-vapid-keys`) so publicKey() and
+    # sendToUser() work out of the box in dev/test without extra setup. Override
+    # both env vars with your own keypair for any real deployment -- anyone with
+    # this private key can send push notifications impersonating this app.
+    publicKey: "${VAPID_PUBLIC_KEY:BEcPvvF9UzPfkVfJCWUteehbrXQnJf3GaTK5AHWQkI8A8qkEJQX7Fodrs0Hbg5o64Z9nctu2qvVp8pZqpN-HYp8}"
+    privateKey: "${VAPID_PRIVATE_KEY:tKBIka51Kbm8yRXXwuyykCX5dkpKr22wJ69d0vbQooQ}"
+    subject: "${VAPID_SUBJECT:mailto:admin@example.com}"
+
 environments:
     development:
         dataSource:
