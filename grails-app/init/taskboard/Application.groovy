@@ -16,7 +16,7 @@ import groovy.transform.CompileStatic
 // generated HTTP Basic password.
 @Import(SecurityConfig)
 // Enables Spring's @Scheduled annotation processing (used by
-// DueDateReminderJob, a grails-app/services artefact -- see its class
+// DueDateReminderJobService, a grails-app/services artefact -- see its class
 // comment for why this project uses Spring scheduling instead of the Grails
 // Quartz plugin, which is incompatible with Grails 7.1.1/Groovy 4).
 @EnableScheduling
