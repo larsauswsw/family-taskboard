@@ -20,6 +20,8 @@
         <button type="submit">+</button>
     </form>
 
+    <!-- Session routes keep CSRF protection (see SecurityConfig.groovy); HTMX's
+         own POSTs don't carry it automatically, so echo the cookie as a header. -->
     <script>
     document.body.addEventListener('htmx:configRequest', (e) => {
         const m = document.cookie.match(/XSRF-TOKEN=([^;]+)/);

@@ -3,9 +3,11 @@ package taskboard
 import grails.gorm.transactions.Transactional
 import java.time.LocalDate
 
+/** Shared by both task-creation paths: the web UI's quick-add and the REST quick-add endpoint. */
 @Transactional
 class TaskService {
 
+    /** Used identically by TaskController.quickAdd() and ApiTaskController.quick(). */
     Task createTask(Map params, User creator) {
         def task = new Task(
             title: params.title,
