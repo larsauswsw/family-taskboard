@@ -46,8 +46,7 @@ class SecurityConfig {
     @Bean
     AuthenticationProvider authenticationProvider(UserDetailsServiceImpl userDetailsService,
                                                    PasswordEncoder passwordEncoder) {
-        DaoAuthenticationProvider provider = new DaoAuthenticationProvider()
-        provider.setUserDetailsService(userDetailsService)
+        DaoAuthenticationProvider provider = new DaoAuthenticationProvider(userDetailsService)
         provider.setPasswordEncoder(passwordEncoder)
         provider
     }
@@ -75,6 +74,8 @@ class SecurityConfig {
             // rely on (JS reads the raw XSRF-TOKEN cookie and sends it back verbatim as
             // X-XSRF-TOKEN -- the masked default would reject that value). This is Spring's
             // own documented trade-off for cookie-based CSRF with SPA/AJAX-style clients.
+            // Safe as long as response compression stays off (BREACH needs both a secret
+            // reflected in a compressed response and an attacker-controlled input).
             .csrf { csrf ->
                 csrf.csrfTokenRepository(org.springframework.security.web.csrf.CookieCsrfTokenRepository.withHttpOnlyFalse())
                     .csrfTokenRequestHandler(new org.springframework.security.web.csrf.CsrfTokenRequestAttributeHandler())
