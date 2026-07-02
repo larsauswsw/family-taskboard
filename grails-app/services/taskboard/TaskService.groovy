@@ -7,6 +7,8 @@ import java.time.LocalDate
 @Transactional
 class TaskService {
 
+    PushService pushService
+
     /** Used identically by TaskController.quickAdd() and ApiTaskController.quick(). */
     Task createTask(Map params, User creator) {
         def task = new Task(
@@ -29,6 +31,45 @@ class TaskService {
         def t = Task.get(id)
         t.status = TaskStatus.DONE
         t.save(failOnError: true)
+        if (t.createdBy) {
+            pushService.sendToUser(t.createdBy, "Task erledigt",
+                "'${t.title}' wurde als erledigt markiert")
+        }
+        t
+    }
+
+    /** Selects assigned, not-yet-done tasks whose due date falls within the assignee's
+     *  notifyDaysBefore window and that haven't already been notified about today
+     *  (lastNotifiedAt is compared by calendar date so the hourly job can run repeatedly
+     *  per day without re-sending). */
+    List<Task> tasksNeedingReminder(LocalDate today) {
+        Task.findAllByStatusNotEqual(TaskStatus.DONE).findAll { Task t ->
+            if (!t.assignedTo) return false
+            long daysOut = java.time.temporal.ChronoUnit.DAYS.between(today, t.dueDate)
+            boolean inWindow = daysOut >= 0 && daysOut <= (t.assignedTo.notifyDaysBefore ?: 1)
+            boolean notNotifiedToday = t.lastNotifiedAt == null ||
+                t.lastNotifiedAt.toLocalDate().isBefore(today)
+            inWindow && notNotifiedToday
+        }
+    }
+
+    void sendDueReminders(LocalDate today) {
+        tasksNeedingReminder(today).each { Task t ->
+            pushService.sendToUser(t.assignedTo, "Task fällig",
+                "${t.title} ist am ${t.dueDate} fällig")
+            t.lastNotifiedAt = java.time.LocalDateTime.now()
+            t.save(failOnError: true)
+        }
+    }
+
+    Task assignTask(Long taskId, User assignee, User actor) {
+        def t = Task.get(taskId)
+        t.assignedTo = assignee
+        t.save(failOnError: true)
+        if (assignee && assignee.id != actor?.id) {
+            pushService.sendToUser(assignee, "Neuer Task",
+                "${actor?.displayName} hat dir '${t.title}' zugewiesen")
+        }
         t
     }
 }
