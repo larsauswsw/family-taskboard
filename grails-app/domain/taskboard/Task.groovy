@@ -16,6 +16,9 @@ class Task {
     String description
     User assignedTo
     User createdBy
+    /** Optional grouping label (Phase 2). Plain reference, not GORM belongsTo --
+     *  see Project's docblock. */
+    Project project
     /** Set by the (not yet built) reminder scheduler to avoid re-notifying. */
     LocalDateTime lastNotifiedAt
     Date dateCreated
@@ -31,6 +34,7 @@ class Task {
         // is trusted to always pass the authenticated user explicitly -- GORM
         // itself does not enforce that a task has a creator.
         createdBy nullable: true
+        project nullable: true
         lastNotifiedAt nullable: true
     }
 }
