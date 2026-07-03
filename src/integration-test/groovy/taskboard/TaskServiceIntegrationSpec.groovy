@@ -69,4 +69,79 @@ class TaskServiceIntegrationSpec extends Specification {
         expect:
         taskService.assignTask(-1L, u, u) == null
     }
+
+    void "createTask stores the given project"() {
+        given:
+        def u = new User(username: "proj-u1", password: "p",
+            displayName: "U", apiToken: "pu1").save(flush: true)
+        def project = new Project(name: "Garten", color: "#3B82F6").save(flush: true)
+
+        when:
+        def t = taskService.createTask([title: "Rasen mähen",
+            dueDate: LocalDate.now(), priority: Priority.LOW, project: project], u)
+
+        then:
+        t.project?.id == project.id
+    }
+
+    void "tasksForProject returns only tasks in that project, sorted by dueDate"() {
+        given:
+        def u = new User(username: "proj-u2", password: "p",
+            displayName: "U", apiToken: "pu2").save(flush: true)
+        def projectA = new Project(name: "A", color: "#3B82F6").save(flush: true)
+        def projectB = new Project(name: "B", color: "#10B981").save(flush: true)
+        taskService.createTask([title: "in A, later",
+            dueDate: LocalDate.now().plusDays(5), priority: Priority.LOW, project: projectA], u)
+        taskService.createTask([title: "in A, soon",
+            dueDate: LocalDate.now().plusDays(1), priority: Priority.LOW, project: projectA], u)
+        taskService.createTask([title: "in B",
+            dueDate: LocalDate.now(), priority: Priority.LOW, project: projectB], u)
+
+        when:
+        def list = taskService.tasksForProject(projectA)
+
+        then:
+        list*.title == ["in A, soon", "in A, later"]
+    }
+
+    void "tasksWithoutProject returns only tasks without a project"() {
+        given:
+        def u = new User(username: "proj-u3", password: "p",
+            displayName: "U", apiToken: "pu3").save(flush: true)
+        def project = new Project(name: "C", color: "#3B82F6").save(flush: true)
+        taskService.createTask([title: "no project",
+            dueDate: LocalDate.now(), priority: Priority.LOW], u)
+        taskService.createTask([title: "has project",
+            dueDate: LocalDate.now(), priority: Priority.LOW, project: project], u)
+
+        when:
+        def list = taskService.tasksWithoutProject()
+
+        then:
+        list*.title == ["no project"]
+    }
+
+    void "assignProject sets the task's project"() {
+        given:
+        def u = new User(username: "proj-u4", password: "p",
+            displayName: "U", apiToken: "pu4").save(flush: true)
+        def project = new Project(name: "D", color: "#3B82F6").save(flush: true)
+        def t = taskService.createTask([title: "x",
+            dueDate: LocalDate.now(), priority: Priority.LOW], u)
+
+        when:
+        def result = taskService.assignProject(t.id, project)
+
+        then:
+        result.project.id == project.id
+        Task.get(t.id).project.id == project.id
+    }
+
+    void "assignProject returns null instead of throwing for an id that no longer exists"() {
+        given:
+        def project = new Project(name: "E", color: "#3B82F6").save(flush: true)
+
+        expect:
+        taskService.assignProject(-1L, project) == null
+    }
 }

@@ -17,6 +17,7 @@ class TaskService {
             priority: params.priority ?: Priority.MEDIUM,
             description: params.description,
             assignedTo: params.assignedTo,
+            project: params.project,
             createdBy: creator
         )
         task.save(failOnError: true)
@@ -25,6 +26,17 @@ class TaskService {
 
     List<Task> openTasksSorted() {
         Task.findAllByStatusNotEqual(TaskStatus.DONE, [sort: 'dueDate', order: 'asc'])
+    }
+
+    /** Tasks in a specific project, same OPEN/IN_PROGRESS-only + dueDate-ascending
+     *  behavior as openTasksSorted(). */
+    List<Task> tasksForProject(Project project) {
+        Task.findAllByStatusNotEqualAndProject(TaskStatus.DONE, project, [sort: 'dueDate', order: 'asc'])
+    }
+
+    /** Tasks with no project assigned -- the "Kein Projekt" filter pill. */
+    List<Task> tasksWithoutProject() {
+        Task.findAllByStatusNotEqualAndProjectIsNull(TaskStatus.DONE, [sort: 'dueDate', order: 'asc'])
     }
 
     /** Returns null (rather than throwing) for an id that no longer exists -- e.g. a
@@ -75,6 +87,16 @@ class TaskService {
             pushService.sendToUser(assignee, "Neuer Task",
                 "${actor?.displayName} hat dir '${t.title}' zugewiesen")
         }
+        t
+    }
+
+    /** Returns null (rather than throwing) for an id that no longer exists,
+     *  same defensive pattern as complete()/assignTask(). */
+    Task assignProject(Long taskId, Project project) {
+        def t = Task.get(taskId)
+        if (!t) return null
+        t.project = project
+        t.save(failOnError: true)
         t
     }
 }
