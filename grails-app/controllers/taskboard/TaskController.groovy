@@ -89,7 +89,7 @@ class TaskController {
             selectedProject = null
         } else if (selectedProject == 'none') {
             tasks = taskService.tasksWithoutProject()
-        } else {
+        } else if (selectedProject.isLong()) {
             Project project = Project.get(selectedProject as Long)
             if (project) {
                 tasks = taskService.tasksForProject(project)
@@ -97,6 +97,13 @@ class TaskController {
                 tasks = taskService.openTasksSorted()
                 selectedProject = null
             }
+        } else {
+            // Malformed value (e.g. a hand-typed ?project=abc) -- not reachable from
+            // the UI, which only ever emits a numeric id or "none", but falls back to
+            // the unfiltered list rather than a NumberFormatException/500, same as an
+            // id that no longer resolves to a Project.
+            tasks = taskService.openTasksSorted()
+            selectedProject = null
         }
         render template: 'list', model: [tasks: tasks, urgencyService: urgencyService,
             today: LocalDate.now(), users: User.list(), projects: Project.list(),
