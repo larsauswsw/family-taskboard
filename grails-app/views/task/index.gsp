@@ -17,12 +17,18 @@
 
     <main id="task-list">
         <g:render template="list"
-            model="[tasks: tasks, urgencyService: urgencyService, today: today, users: users]"/>
+            model="[tasks: tasks, urgencyService: urgencyService, today: today, users: users, projects: projects, selectedProject: selectedProject]"/>
     </main>
 
     <form id="quick-add" hx-post="${createLink(action: 'quickAdd')}"
           hx-target="#task-list" hx-swap="innerHTML">
         <input type="text" name="title" id="title-input" placeholder="Neuer Task…" required>
+        <select name="project">
+            <option value="">Kein Projekt</option>
+            <g:each in="${projects}" var="p">
+                <option value="${p.id}">${p.name}</option>
+            </g:each>
+        </select>
         <button type="button" id="mic-btn" class="fab" aria-label="Per Sprache hinzufügen">🎤</button>
         <button type="submit">+</button>
     </form>

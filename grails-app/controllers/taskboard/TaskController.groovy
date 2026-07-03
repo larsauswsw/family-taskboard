@@ -9,8 +9,13 @@ import java.time.LocalDate
  * SecurityConfig's anyRequest().authenticated() rule (see SecurityConfig.groovy),
  * which already covers everything under /task/**.
  *
- * quickAdd() and complete() are called via HTMX and re-render the "list"
- * template fragment, which HTMX swaps into #task-list -- no page reload.
+ * quickAdd(), complete(), assign() and assignProject() are called via HTMX and
+ * re-render the "list" template fragment, which HTMX swaps into #task-list --
+ * no page reload. That fragment now includes the project filter pills, so
+ * every one of those actions must supply `projects` (and `selectedProject`,
+ * always null for them -- they don't change the active filter, matching the
+ * existing behavior where completing/assigning a task always returns to the
+ * unfiltered "Alle" view).
  */
 class TaskController {
 
@@ -25,7 +30,8 @@ class TaskController {
 
     def index() {
         [tasks: taskService.openTasksSorted(), urgencyService: urgencyService,
-         today: LocalDate.now(), users: User.list(), projects: Project.list()]
+         today: LocalDate.now(), users: User.list(), projects: Project.list(),
+         selectedProject: null]
     }
 
     def quickAdd() {
@@ -33,16 +39,19 @@ class TaskController {
         taskService.createTask([
             title: params.title,
             dueDate: params.dueDate ? LocalDate.parse(params.dueDate) : LocalDate.now(),
-            priority: params.priority ? Priority.valueOf(params.priority) : Priority.MEDIUM
+            priority: params.priority ? Priority.valueOf(params.priority) : Priority.MEDIUM,
+            project: params.project ? Project.get(params.project as Long) : null
         ], creator)
         render template: 'list', model: [tasks: taskService.openTasksSorted(),
-            urgencyService: urgencyService, today: LocalDate.now(), users: User.list()]
+            urgencyService: urgencyService, today: LocalDate.now(), users: User.list(),
+            projects: Project.list(), selectedProject: null]
     }
 
     def complete(Long id) {
         taskService.complete(id)
         render template: 'list', model: [tasks: taskService.openTasksSorted(),
-            urgencyService: urgencyService, today: LocalDate.now(), users: User.list()]
+            urgencyService: urgencyService, today: LocalDate.now(), users: User.list(),
+            projects: Project.list(), selectedProject: null]
     }
 
     /** Reachable from the assignee <select> in _card.gsp; params.assignedTo is a User
@@ -53,6 +62,44 @@ class TaskController {
         User assignee = params.assignedTo ? User.get(params.assignedTo as Long) : null
         taskService.assignTask(id, assignee, currentUser())
         render template: 'list', model: [tasks: taskService.openTasksSorted(),
-            urgencyService: urgencyService, today: LocalDate.now(), users: User.list()]
+            urgencyService: urgencyService, today: LocalDate.now(), users: User.list(),
+            projects: Project.list(), selectedProject: null]
+    }
+
+    /** Reachable from the project <select> in _card.gsp; params.project is a Project
+     *  id, or blank to remove the task from any project. */
+    def assignProject(Long id) {
+        Project project = params.project ? Project.get(params.project as Long) : null
+        taskService.assignProject(id, project)
+        render template: 'list', model: [tasks: taskService.openTasksSorted(),
+            urgencyService: urgencyService, today: LocalDate.now(), users: User.list(),
+            projects: Project.list(), selectedProject: null]
+    }
+
+    /** Reachable from the project filter pills above the task list. params.project is
+     *  a Project id, the literal "none" for the "Kein Projekt" pill, or absent/blank
+     *  for "Alle". An id that no longer resolves to a Project falls back to the
+     *  unfiltered list rather than erroring -- e.g. a stale pill left over after
+     *  another device deleted that project. */
+    def list() {
+        List<Task> tasks
+        String selectedProject = params.project
+        if (!selectedProject) {
+            tasks = taskService.openTasksSorted()
+            selectedProject = null
+        } else if (selectedProject == 'none') {
+            tasks = taskService.tasksWithoutProject()
+        } else {
+            Project project = Project.get(selectedProject as Long)
+            if (project) {
+                tasks = taskService.tasksForProject(project)
+            } else {
+                tasks = taskService.openTasksSorted()
+                selectedProject = null
+            }
+        }
+        render template: 'list', model: [tasks: tasks, urgencyService: urgencyService,
+            today: LocalDate.now(), users: User.list(), projects: Project.list(),
+            selectedProject: selectedProject]
     }
 }
