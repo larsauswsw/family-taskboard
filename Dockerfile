@@ -5,6 +5,6 @@ RUN ./gradlew assemble --no-daemon
 
 FROM eclipse-temurin:21-jre
 WORKDIR /app
-COPY --from=build /app/build/libs/*.jar app.jar
+COPY --from=build /app/build/libs/*.war app.jar
 EXPOSE 8080
 ENTRYPOINT ["java", "-jar", "app.jar"]

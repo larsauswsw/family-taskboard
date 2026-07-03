@@ -77,6 +77,15 @@ tasks.withType(Test).configureEach {
     useJUnitPlatform()
 }
 
+// The "war" plugin (needed only so `assets` output ends up on the classpath
+// correctly) also registers a plain `war` task alongside Spring Boot's
+// executable `bootWar`. Both produce a .war in build/libs -- bootWar's is
+// runnable via `java -jar`, the plain one isn't runnable at all. Disabling it
+// leaves exactly one artifact in build/libs, which the Dockerfile copies.
+tasks.named('war') {
+    enabled = false
+}
+
 
 
 assets {
