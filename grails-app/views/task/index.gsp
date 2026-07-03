@@ -9,6 +9,12 @@
 </head>
 <body>
     <header class="navbar"><h1>Meine Tasks</h1></header>
+
+    <details id="project-manage-section">
+        <summary>Projekte verwalten</summary>
+        <g:render template="/project/manage" model="[projects: projects, error: null]"/>
+    </details>
+
     <main id="task-list">
         <g:render template="list"
             model="[tasks: tasks, urgencyService: urgencyService, today: today, users: users]"/>

@@ -25,7 +25,7 @@ class TaskController {
 
     def index() {
         [tasks: taskService.openTasksSorted(), urgencyService: urgencyService,
-         today: LocalDate.now(), users: User.list()]
+         today: LocalDate.now(), users: User.list(), projects: Project.list()]
     }
 
     def quickAdd() {
