@@ -49,4 +49,21 @@ class SecurityFilterChainIntegrationSpec extends Specification {
         conn.responseCode == 302
         conn.getHeaderField("Location")?.contains("/login/auth")
     }
+
+    /**
+     * Guards the two stacked bugs documented on DueDateReminderJobService's docblock:
+     * (1) Grails only registers grails-app/services classes as beans if the name ends
+     * in "Service", and (2) Grails services default to lazyInit=true, so a bean with no
+     * other caller (this one is purely a @Scheduled trigger) would never be instantiated
+     * and its @Scheduled method would never fire. Both were found only by manual/live
+     * verification before this test existed.
+     */
+    void "the due-date reminder job bean is registered under its required name and eagerly created"() {
+        given:
+        def beanFactory = ((org.springframework.context.ConfigurableApplicationContext) ctx).beanFactory
+
+        expect:
+        ctx.containsBean('dueDateReminderJobService')
+        beanFactory.containsSingleton('dueDateReminderJobService')
+    }
 }

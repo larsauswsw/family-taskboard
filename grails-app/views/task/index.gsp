@@ -11,7 +11,7 @@
     <header class="navbar"><h1>Meine Tasks</h1></header>
     <main id="task-list">
         <g:render template="list"
-            model="[tasks: tasks, urgencyService: urgencyService, today: today]"/>
+            model="[tasks: tasks, urgencyService: urgencyService, today: today, users: users]"/>
     </main>
 
     <form id="quick-add" hx-post="${createLink(action: 'quickAdd')}"

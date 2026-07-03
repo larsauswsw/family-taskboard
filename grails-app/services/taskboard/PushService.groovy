@@ -1,6 +1,7 @@
 package taskboard
 
 import grails.gorm.transactions.Transactional
+import groovy.json.JsonOutput
 import nl.martijndwars.webpush.PushService as WebPush
 import nl.martijndwars.webpush.Notification
 import org.bouncycastle.jce.provider.BouncyCastleProvider
@@ -15,6 +16,13 @@ import java.security.Security
  */
 @Transactional
 class PushService {
+
+    // Registered once at class-load time rather than per sendToUser call --
+    // Security.getProvider dedupes by name anyway, but there's no reason to pay
+    // that lookup on every notification.
+    static {
+        Security.addProvider(new BouncyCastleProvider())
+    }
 
     def grailsApplication
 
@@ -34,7 +42,6 @@ class PushService {
     void sendToUser(User user, String title, String body) {
         WebPush web
         try {
-            Security.addProvider(new BouncyCastleProvider())
             def cfg = grailsApplication.config
             web = new WebPush()
             web.setPublicKey(cfg.getProperty('vapid.publicKey'))
@@ -46,7 +53,7 @@ class PushService {
         }
 
         try {
-            String payload = "{\"title\":\"${title}\",\"body\":\"${body}\"}"
+            String payload = buildPayload(title, body)
             PushSubscription.findAllByUser(user).each { sub ->
                 try {
                     web.send(new Notification(sub.endpoint, sub.p256dh, sub.auth,
@@ -58,5 +65,14 @@ class PushService {
         } catch (Exception e) {
             log.warn("Push delivery failed for user ${user.username}: ${e.message}")
         }
+    }
+
+    /** Package-visible (not private) so it can be unit-tested directly without a DB or
+     *  a VAPID keypair. Uses JsonOutput rather than hand-built string interpolation --
+     *  a title/body containing a quote or backslash (e.g. a task named 'Buy 6" pipe')
+     *  would otherwise produce invalid JSON that sw.js's event.data.json() throws on,
+     *  silently swallowing the notification. */
+    static String buildPayload(String title, String body) {
+        JsonOutput.toJson([title: title, body: body])
     }
 }

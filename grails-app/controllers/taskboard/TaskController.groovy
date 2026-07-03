@@ -36,12 +36,23 @@ class TaskController {
             priority: params.priority ? Priority.valueOf(params.priority) : Priority.MEDIUM
         ], creator)
         render template: 'list', model: [tasks: taskService.openTasksSorted(),
-            urgencyService: urgencyService, today: LocalDate.now()]
+            urgencyService: urgencyService, today: LocalDate.now(), users: User.list()]
     }
 
     def complete(Long id) {
         taskService.complete(id)
         render template: 'list', model: [tasks: taskService.openTasksSorted(),
-            urgencyService: urgencyService, today: LocalDate.now()]
+            urgencyService: urgencyService, today: LocalDate.now(), users: User.list()]
+    }
+
+    /** Reachable from the assignee <select> in _card.gsp; params.assignedTo is a User
+     *  id, or blank to unassign. This is the only place TaskService.assignTask is
+     *  called from -- without it the assignment-notification trigger and the
+     *  due-date reminder job (which only selects assigned tasks) would be unreachable. */
+    def assign(Long id) {
+        User assignee = params.assignedTo ? User.get(params.assignedTo as Long) : null
+        taskService.assignTask(id, assignee, currentUser())
+        render template: 'list', model: [tasks: taskService.openTasksSorted(),
+            urgencyService: urgencyService, today: LocalDate.now(), users: User.list()]
     }
 }

@@ -91,4 +91,109 @@ class TaskControllerSessionFlowIntegrationSpec extends Specification {
             Task.findAllByTitle("Session-Flow-Test-Task")*.delete(flush: true)
         }
     }
+
+    void "quick-add without a CSRF token is rejected, not silently accepted"() {
+        given: "a logged-in session (same login sequence as the happy-path test above)"
+        Map<String, String> cookies = [:]
+        def initial = new URL("http://localhost:${serverPort}/login/auth").openConnection()
+        initial.instanceFollowRedirects = false
+        initial.responseCode
+        extractCookies(initial, cookies)
+
+        def login = new URL("http://localhost:${serverPort}/login").openConnection()
+        login.requestMethod = "POST"
+        login.doOutput = true
+        login.instanceFollowRedirects = false
+        login.setRequestProperty("Cookie", cookieHeader(cookies))
+        login.setRequestProperty("Content-Type", "application/x-www-form-urlencoded")
+        String csrfToken = cookies['XSRF-TOKEN']
+        String form = "username=lars&password=changeme&_csrf=${URLEncoder.encode(csrfToken, 'UTF-8')}"
+        login.outputStream.withWriter { it << form }
+        login.responseCode
+        extractCookies(login, cookies)
+
+        when: "posting a quick-add WITHOUT the X-XSRF-TOKEN header the HTMX shim normally adds"
+        def quickAdd = new URL("http://localhost:${serverPort}/task/quickAdd").openConnection()
+        quickAdd.requestMethod = "POST"
+        quickAdd.doOutput = true
+        quickAdd.instanceFollowRedirects = false
+        quickAdd.setRequestProperty("Cookie", cookieHeader(cookies))
+        quickAdd.setRequestProperty("Content-Type", "application/x-www-form-urlencoded")
+        quickAdd.outputStream.withWriter { it << "title=${URLEncoder.encode('Should-Not-Be-Created', 'UTF-8')}" }
+
+        then:
+        quickAdd.responseCode == 403
+    }
+
+    void "assigning a task via the card's select updates assignedTo and re-renders the assignee's name"() {
+        given: "a logged-in session"
+        Map<String, String> cookies = [:]
+        def initial = new URL("http://localhost:${serverPort}/login/auth").openConnection()
+        initial.instanceFollowRedirects = false
+        initial.responseCode
+        extractCookies(initial, cookies)
+
+        def login = new URL("http://localhost:${serverPort}/login").openConnection()
+        login.requestMethod = "POST"
+        login.doOutput = true
+        login.instanceFollowRedirects = false
+        login.setRequestProperty("Cookie", cookieHeader(cookies))
+        login.setRequestProperty("Content-Type", "application/x-www-form-urlencoded")
+        String csrfToken = cookies['XSRF-TOKEN']
+        String form = "username=lars&password=changeme&_csrf=${URLEncoder.encode(csrfToken, 'UTF-8')}"
+        login.outputStream.withWriter { it << form }
+        login.responseCode
+        extractCookies(login, cookies)
+
+        def landing = new URL(login.getHeaderField("Location")).openConnection()
+        landing.setRequestProperty("Cookie", cookieHeader(cookies))
+        landing.responseCode
+        extractCookies(landing, cookies)
+
+        and: "a task to assign, and a second user to assign it to"
+        def quickAdd = new URL("http://localhost:${serverPort}/task/quickAdd").openConnection()
+        quickAdd.requestMethod = "POST"
+        quickAdd.doOutput = true
+        quickAdd.instanceFollowRedirects = false
+        quickAdd.setRequestProperty("Cookie", cookieHeader(cookies))
+        quickAdd.setRequestProperty("X-XSRF-TOKEN", cookies['XSRF-TOKEN'])
+        quickAdd.setRequestProperty("Content-Type", "application/x-www-form-urlencoded")
+        quickAdd.outputStream.withWriter { it << "title=${URLEncoder.encode('Assign-Flow-Test-Task', 'UTF-8')}" }
+        quickAdd.responseCode
+        extractCookies(quickAdd, cookies)
+
+        Long taskId
+        Task.withTransaction { taskId = Task.findByTitle("Assign-Flow-Test-Task").id }
+        User.withTransaction {
+            new User(username: "assign-flow-u", password: "p",
+                displayName: "Assign-Flow-User", apiToken: "afu").save(flush: true)
+        }
+        Long assigneeId
+        User.withTransaction { assigneeId = User.findByUsername("assign-flow-u").id }
+
+        when: "posting to /task/assign/<id>, exactly what the card's <select> does on change"
+        def assign = new URL("http://localhost:${serverPort}/task/assign/${taskId}").openConnection()
+        assign.requestMethod = "POST"
+        assign.doOutput = true
+        assign.instanceFollowRedirects = false
+        assign.setRequestProperty("Cookie", cookieHeader(cookies))
+        assign.setRequestProperty("X-XSRF-TOKEN", cookies['XSRF-TOKEN'])
+        assign.setRequestProperty("Content-Type", "application/x-www-form-urlencoded")
+        assign.outputStream.withWriter { it << "assignedTo=${assigneeId}" }
+        int assignStatus = assign.responseCode
+        String body = assign.inputStream.text
+
+        then: "the response fragment shows the new assignee, and the DB reflects it"
+        assignStatus == 200
+        body.contains("Assign-Flow-User")
+        Task.withTransaction { Task.get(taskId).assignedTo?.id == assigneeId }
+
+        cleanup:
+        Task.withTransaction {
+            Task.findAllByTitle("Assign-Flow-Test-Task")*.delete(flush: true)
+        }
+        User.withTransaction {
+            User.findAllByUsername("assign-flow-u")*.delete(flush: true)
+        }
+    }
 }

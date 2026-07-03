@@ -27,8 +27,12 @@ class TaskService {
         Task.findAllByStatusNotEqual(TaskStatus.DONE, [sort: 'dueDate', order: 'asc'])
     }
 
+    /** Returns null (rather than throwing) for an id that no longer exists -- e.g. a
+     *  stale HTMX card still on screen after the task was completed from another
+     *  device/tab. Callers re-render the current list either way. */
     Task complete(Long id) {
         def t = Task.get(id)
+        if (!t) return null
         t.status = TaskStatus.DONE
         t.save(failOnError: true)
         if (t.createdBy) {
@@ -64,6 +68,7 @@ class TaskService {
 
     Task assignTask(Long taskId, User assignee, User actor) {
         def t = Task.get(taskId)
+        if (!t) return null
         t.assignedTo = assignee
         t.save(failOnError: true)
         if (assignee && assignee.id != actor?.id) {
