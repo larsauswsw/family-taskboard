@@ -187,4 +187,20 @@ class TaskServiceIntegrationSpec extends Specification {
         t.dueDate == LocalDate.now()
         t.title == "Nur ein Titel"
     }
+
+    void "createTask parses a date phrase from the title AND keeps the given project"() {
+        given: "the two features (Phase 2 projects, date parsing) must compose correctly"
+        def u = new User(username: "date-proj-u", password: "p",
+            displayName: "U", apiToken: "dateproju").save(flush: true)
+        def project = new Project(name: "Haushalt", color: "#3B82F6").save(flush: true)
+
+        when:
+        def t = taskService.createTask([title: "Einkauf morgen",
+            priority: Priority.LOW, project: project], u)
+
+        then:
+        t.dueDate == LocalDate.now().plusDays(1)
+        t.title == "Einkauf"
+        t.project?.id == project.id
+    }
 }

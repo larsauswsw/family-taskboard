@@ -13,12 +13,17 @@ class TaskService {
     /** Used identically by TaskController.quickAdd() and ApiTaskController.quick().
      *  If params.dueDate is absent/null, params.title is scanned for a recognized
      *  German date phrase (see DateParsingService); an explicit dueDate always
-     *  wins and skips parsing entirely, leaving the title untouched. */
+     *  wins and skips parsing entirely, leaving the title untouched. A null/blank
+     *  title skips parsing too (DateParsingService.parse() would NPE on a null
+     *  argument) and falls through to Task's own `blank: false` validation, same
+     *  as before this feature existed -- ApiTaskController already rejects an
+     *  empty title with 422 before calling here, but TaskController.quickAdd()
+     *  does not pre-validate, so this guard is this method's own responsibility. */
     Task createTask(Map params, User creator) {
         LocalDate dueDate
         String title = params.title
-        if (params.dueDate) {
-            dueDate = params.dueDate
+        if (params.dueDate || !params.title?.trim()) {
+            dueDate = params.dueDate ?: LocalDate.now()
         } else {
             def parsed = dateParsingService.parse(params.title as String, LocalDate.now())
             dueDate = parsed.date ?: LocalDate.now()
