@@ -1,7 +1,6 @@
 package taskboard
 
 import grails.converters.JSON
-import java.time.LocalDate
 
 /**
  * Stateless REST quick-add for Apple Shortcuts (Siri, Watch, Back Tap, Action
@@ -15,7 +14,9 @@ class ApiTaskController {
 
     TaskService taskService
 
-    /** 201 + created task JSON, 401 for a missing/unknown token, 422 for empty/missing text. */
+    /** 201 + created task JSON, 401 for a missing/unknown token, 422 for empty/missing text.
+     *  No dueDate is passed here -- TaskService.createTask() parses a date phrase (e.g.
+     *  "bis Freitag") out of the dictated text itself, defaulting to today if none is found. */
     def quick() {
         String auth = request.getHeader('Authorization')
         String token = auth?.startsWith('Bearer ') ? auth.substring(7) : null
@@ -32,8 +33,7 @@ class ApiTaskController {
                 text: ([error: 'empty text'] as JSON).toString()
             return
         }
-        def task = taskService.createTask(
-            [title: text, dueDate: LocalDate.now(), priority: Priority.MEDIUM], user)
+        def task = taskService.createTask([title: text, priority: Priority.MEDIUM], user)
         render status: 201, contentType: 'application/json',
             text: ([id: task.id, title: task.title,
                     dueDate: task.dueDate.toString()] as JSON).toString()

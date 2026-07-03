@@ -8,12 +8,25 @@ import java.time.LocalDate
 class TaskService {
 
     PushService pushService
+    DateParsingService dateParsingService
 
-    /** Used identically by TaskController.quickAdd() and ApiTaskController.quick(). */
+    /** Used identically by TaskController.quickAdd() and ApiTaskController.quick().
+     *  If params.dueDate is absent/null, params.title is scanned for a recognized
+     *  German date phrase (see DateParsingService); an explicit dueDate always
+     *  wins and skips parsing entirely, leaving the title untouched. */
     Task createTask(Map params, User creator) {
+        LocalDate dueDate
+        String title = params.title
+        if (params.dueDate) {
+            dueDate = params.dueDate
+        } else {
+            def parsed = dateParsingService.parse(params.title as String, LocalDate.now())
+            dueDate = parsed.date ?: LocalDate.now()
+            title = parsed.title
+        }
         def task = new Task(
-            title: params.title,
-            dueDate: params.dueDate ?: LocalDate.now(),
+            title: title,
+            dueDate: dueDate,
             priority: params.priority ?: Priority.MEDIUM,
             description: params.description,
             assignedTo: params.assignedTo,

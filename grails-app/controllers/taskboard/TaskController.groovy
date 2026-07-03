@@ -38,7 +38,7 @@ class TaskController {
         User creator = currentUser()
         taskService.createTask([
             title: params.title,
-            dueDate: params.dueDate ? LocalDate.parse(params.dueDate) : LocalDate.now(),
+            dueDate: params.dueDate ? LocalDate.parse(params.dueDate) : null,
             priority: params.priority ? Priority.valueOf(params.priority) : Priority.MEDIUM,
             project: params.project ? Project.get(params.project as Long) : null
         ], creator)

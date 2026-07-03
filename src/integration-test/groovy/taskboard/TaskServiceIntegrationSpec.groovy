@@ -144,4 +144,47 @@ class TaskServiceIntegrationSpec extends Specification {
         expect:
         taskService.assignProject(-1L, project) == null
     }
+
+    void "createTask with no explicit dueDate parses a date phrase from the title"() {
+        given:
+        def u = new User(username: "date-u1", password: "p",
+            displayName: "U", apiToken: "dateu1").save(flush: true)
+
+        when:
+        def t = taskService.createTask([title: "Müll rausbringen morgen",
+            priority: Priority.LOW], u)
+
+        then:
+        t.dueDate == LocalDate.now().plusDays(1)
+        t.title == "Müll rausbringen"
+    }
+
+    void "createTask with an explicit dueDate ignores any date phrase in the title"() {
+        given:
+        def u = new User(username: "date-u2", password: "p",
+            displayName: "U", apiToken: "dateu2").save(flush: true)
+        LocalDate explicitDate = LocalDate.now().plusDays(20)
+
+        when:
+        def t = taskService.createTask([title: "Task bis Freitag",
+            dueDate: explicitDate, priority: Priority.LOW], u)
+
+        then:
+        t.dueDate == explicitDate
+        t.title == "Task bis Freitag"
+    }
+
+    void "createTask with no date phrase and no explicit dueDate defaults to today"() {
+        given:
+        def u = new User(username: "date-u3", password: "p",
+            displayName: "U", apiToken: "dateu3").save(flush: true)
+
+        when:
+        def t = taskService.createTask([title: "Nur ein Titel",
+            priority: Priority.LOW], u)
+
+        then:
+        t.dueDate == LocalDate.now()
+        t.title == "Nur ein Titel"
+    }
 }

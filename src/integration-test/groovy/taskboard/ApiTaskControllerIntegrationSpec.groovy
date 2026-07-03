@@ -6,6 +6,8 @@ import spock.lang.Specification
 import groovy.json.JsonOutput
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.boot.web.servlet.context.ServletWebServerApplicationContext
+import java.time.DayOfWeek
+import java.time.LocalDate
 
 /**
  * No @Rollback here: this spec makes real HTTP calls to the embedded server,
@@ -61,5 +63,40 @@ class ApiTaskControllerIntegrationSpec extends Specification {
 
         expect:
         conn.responseCode == 401
+    }
+
+    void "quick-add parses 'bis <weekday>' from the dictated text and strips it from the title"() {
+        given:
+        User.withTransaction {
+            new User(username: "api-date", password: "p", displayName: "ApiDate",
+                     apiToken: "api-date-token").save(flush: true, failOnError: true)
+        }
+        LocalDate today = LocalDate.now()
+        int daysToAdd = (DayOfWeek.FRIDAY.value - today.dayOfWeek.value + 7) % 7
+        if (daysToAdd == 0) daysToAdd = 7
+        LocalDate expectedDueDate = today.plusDays(daysToAdd)
+
+        def conn = new URL("http://localhost:${serverPort}/api/tasks/quick").openConnection()
+        conn.requestMethod = "POST"
+        conn.doOutput = true
+        conn.setRequestProperty("Authorization", "Bearer api-date-token")
+        conn.setRequestProperty("Content-Type", "application/json")
+        conn.outputStream.withWriter {
+            it << JsonOutput.toJson([text: "Steuererklärung abgeben bis Freitag"])
+        }
+
+        expect:
+        conn.responseCode == 201
+        def body = new groovy.json.JsonSlurper().parse(conn.inputStream)
+        body.title == "Steuererklärung abgeben"
+        body.dueDate == expectedDueDate.toString()
+
+        cleanup:
+        Task.withTransaction {
+            Task.findAllByTitle("Steuererklärung abgeben")*.delete(flush: true)
+        }
+        User.withTransaction {
+            User.findByUsername("api-date")?.delete(flush: true)
+        }
     }
 }
