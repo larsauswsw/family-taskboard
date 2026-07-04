@@ -76,6 +76,30 @@ class TaskController {
             projects: Project.list(), selectedProject: null]
     }
 
+    /** Reachable from the recurrence form in _card.gsp's "🔁 Wiederholung"
+     *  details section. params.type is a RecurrenceType name (the <select>
+     *  only ever emits a valid one, same trust level as Priority.valueOf in
+     *  quickAdd()); params.interval is optional (defaults to 1 in the
+     *  service); params.weekday may appear multiple times (one per checked
+     *  checkbox), only when type is WEEKDAYS. */
+    def setRecurrence(Long id) {
+        RecurrenceType type = RecurrenceType.valueOf(params.type)
+        Integer interval = params.interval ? params.interval as Integer : null
+        String weekdays = params.list('weekday') ? params.list('weekday').join(',') : null
+        taskService.setRecurrence(id, type, interval, weekdays)
+        render template: 'list', model: [tasks: taskService.openTasksSorted(),
+            urgencyService: urgencyService, today: LocalDate.now(), users: User.list(),
+            projects: Project.list(), selectedProject: null]
+    }
+
+    /** Reachable from the "Serie beenden" button in _card.gsp. */
+    def stopRecurrence(Long id) {
+        taskService.stopRecurrence(id)
+        render template: 'list', model: [tasks: taskService.openTasksSorted(),
+            urgencyService: urgencyService, today: LocalDate.now(), users: User.list(),
+            projects: Project.list(), selectedProject: null]
+    }
+
     /** Reachable from the project filter pills above the task list. params.project is
      *  a Project id, the literal "none" for the "Kein Projekt" pill, or absent/blank
      *  for "Alle". An id that no longer resolves to a Project falls back to the

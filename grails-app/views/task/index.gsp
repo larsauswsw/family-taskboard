@@ -43,5 +43,6 @@
     </script>
     <asset:javascript src="voice.js"/>
     <asset:javascript src="push.js"/>
+    <asset:javascript src="recurrence.js"/>
 </body>
 </html>

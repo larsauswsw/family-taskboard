@@ -196,4 +196,77 @@ class TaskControllerSessionFlowIntegrationSpec extends Specification {
             User.findAllByUsername("assign-flow-u")*.delete(flush: true)
         }
     }
+
+    void "setting and then stopping a recurrence via HTMX round-trips correctly"() {
+        given: "a logged-in session"
+        Map<String, String> cookies = [:]
+        def initial = new URL("http://localhost:${serverPort}/login/auth").openConnection()
+        initial.instanceFollowRedirects = false
+        initial.responseCode
+        extractCookies(initial, cookies)
+
+        def login = new URL("http://localhost:${serverPort}/login").openConnection()
+        login.requestMethod = "POST"
+        login.doOutput = true
+        login.instanceFollowRedirects = false
+        login.setRequestProperty("Cookie", cookieHeader(cookies))
+        login.setRequestProperty("Content-Type", "application/x-www-form-urlencoded")
+        String csrfToken = cookies['XSRF-TOKEN']
+        String form = "username=lars&password=changeme&_csrf=${URLEncoder.encode(csrfToken, 'UTF-8')}"
+        login.outputStream.withWriter { it << form }
+        login.responseCode
+        extractCookies(login, cookies)
+
+        def landing = new URL(login.getHeaderField("Location")).openConnection()
+        landing.setRequestProperty("Cookie", cookieHeader(cookies))
+        landing.responseCode
+        extractCookies(landing, cookies)
+
+        def quickAdd = new URL("http://localhost:${serverPort}/task/quickAdd").openConnection()
+        quickAdd.requestMethod = "POST"
+        quickAdd.doOutput = true
+        quickAdd.instanceFollowRedirects = false
+        quickAdd.setRequestProperty("Cookie", cookieHeader(cookies))
+        quickAdd.setRequestProperty("X-XSRF-TOKEN", cookies['XSRF-TOKEN'])
+        quickAdd.setRequestProperty("Content-Type", "application/x-www-form-urlencoded")
+        quickAdd.outputStream.withWriter { it << "title=${URLEncoder.encode('Recurring-Flow-Task', 'UTF-8')}" }
+        quickAdd.responseCode
+        extractCookies(quickAdd, cookies)
+        Long taskId
+        Task.withTransaction { taskId = Task.findByTitle("Recurring-Flow-Task").id }
+
+        when: "setting a weekly recurrence"
+        def setRec = new URL("http://localhost:${serverPort}/task/setRecurrence/${taskId}").openConnection()
+        setRec.requestMethod = "POST"
+        setRec.doOutput = true
+        setRec.instanceFollowRedirects = false
+        setRec.setRequestProperty("Cookie", cookieHeader(cookies))
+        setRec.setRequestProperty("X-XSRF-TOKEN", cookies['XSRF-TOKEN'])
+        setRec.setRequestProperty("Content-Type", "application/x-www-form-urlencoded")
+        setRec.outputStream.withWriter { it << "type=WEEKLY&interval=1" }
+        int setRecStatus = setRec.responseCode
+        extractCookies(setRec, cookies)
+
+        then:
+        setRecStatus == 200
+        Task.withTransaction { Task.get(taskId).recurrenceRule?.active }
+
+        when: "stopping the series"
+        def stopRec = new URL("http://localhost:${serverPort}/task/stopRecurrence/${taskId}").openConnection()
+        stopRec.requestMethod = "POST"
+        stopRec.doOutput = true
+        stopRec.instanceFollowRedirects = false
+        stopRec.setRequestProperty("Cookie", cookieHeader(cookies))
+        stopRec.setRequestProperty("X-XSRF-TOKEN", cookies['XSRF-TOKEN'])
+        stopRec.setRequestProperty("Content-Type", "application/x-www-form-urlencoded")
+        stopRec.outputStream.withWriter { it << "" }
+        int stopRecStatus = stopRec.responseCode
+
+        then:
+        stopRecStatus == 200
+        Task.withTransaction { !Task.get(taskId).recurrenceRule?.active }
+
+        cleanup:
+        Task.withTransaction { Task.findAllByTitle("Recurring-Flow-Task")*.delete(flush: true) }
+    }
 }
