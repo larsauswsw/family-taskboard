@@ -67,17 +67,22 @@ class TaskService {
      *  (same as ProjectService.delete()) because GORM integration tests run under
      *  FlushMode.COMMIT: without an explicit flush, a caller querying by status
      *  (e.g. Task.findByTitleAndStatus) right after complete() would still see the
-     *  pre-update DB row instead of this method's changes. */
+     *  pre-update DB row instead of this method's changes. Spawning is guarded by
+     *  wasAlreadyDone: completing never deactivates the recurrence rule, so the same
+     *  already-DONE task being completed again (e.g. a stale HTMX card double-clicked
+     *  before the swap, or two tabs/devices racing) must be a no-op rather than
+     *  spawning a second next occurrence. */
     Task complete(Long id) {
         def t = Task.get(id)
         if (!t) return null
+        boolean wasAlreadyDone = t.status == TaskStatus.DONE
         t.status = TaskStatus.DONE
         t.save(flush: true, failOnError: true)
         if (t.createdBy) {
             pushService.sendToUser(t.createdBy, "Task erledigt",
                 "'${t.title}' wurde als erledigt markiert")
         }
-        if (t.recurrenceRule?.active) {
+        if (!wasAlreadyDone && t.recurrenceRule?.active) {
             def next = new Task(
                 title: t.title,
                 dueDate: recurrenceService.nextDueDate(t.recurrenceRule, t.dueDate),

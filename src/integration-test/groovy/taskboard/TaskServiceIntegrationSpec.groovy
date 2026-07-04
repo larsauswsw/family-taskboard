@@ -224,6 +224,44 @@ class TaskServiceIntegrationSpec extends Specification {
         next.priority == Priority.LOW
     }
 
+    void "complete on a task with project and assignedTo set retains both on the spawned occurrence"() {
+        given:
+        def creator = new User(username: "rec-proj-creator", password: "p",
+            displayName: "Creator", apiToken: "recprojc").save(flush: true)
+        def assignee = new User(username: "rec-proj-assignee", password: "p",
+            displayName: "Assignee", apiToken: "recproja").save(flush: true)
+        def project = new Project(name: "Haushalt", color: "#3B82F6").save(flush: true)
+        def t = taskService.createTask([title: "Bad putzen",
+            dueDate: LocalDate.now(), priority: Priority.LOW,
+            project: project, assignedTo: assignee], creator)
+        taskService.setRecurrence(t.id, RecurrenceType.WEEKLY, 1, null)
+
+        when:
+        taskService.complete(t.id)
+        def next = Task.findByTitleAndStatus("Bad putzen", TaskStatus.OPEN)
+
+        then:
+        next != null
+        next.project?.id == project.id
+        next.assignedTo?.id == assignee.id
+    }
+
+    void "completing an already-DONE recurring task a second time does not spawn a second occurrence"() {
+        given: "e.g. a double-click before the HTMX swap removes the button, or two tabs/devices"
+        def u = new User(username: "rec-dup-u1", password: "p",
+            displayName: "U", apiToken: "recdup1").save(flush: true)
+        def t = taskService.createTask([title: "Doppelt-Erledigt-Task",
+            dueDate: LocalDate.now(), priority: Priority.LOW], u)
+        taskService.setRecurrence(t.id, RecurrenceType.DAILY, 1, null)
+
+        when:
+        taskService.complete(t.id)
+        taskService.complete(t.id)
+
+        then:
+        Task.findAllByTitleAndStatus("Doppelt-Erledigt-Task", TaskStatus.OPEN).size() == 1
+    }
+
     void "complete on a task with a stopped recurrence rule does not create a next occurrence"() {
         given:
         def u = new User(username: "rec-u2", password: "p",
