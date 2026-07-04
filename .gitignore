@@ -4,3 +4,5 @@ build/
 *.log
 .env
 out/
+.idea/
+.claude/
