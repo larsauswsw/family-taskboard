@@ -1,0 +1,27 @@
+name: taskboard-prod
+services:
+  db:
+    image: postgres:16
+    environment:
+      POSTGRES_USER: ${DB_USER}
+      POSTGRES_PASSWORD: ${DB_PASSWORD}
+      POSTGRES_DB: taskboard
+    volumes:
+      - dbdata:/var/lib/postgresql/data
+    restart: unless-stopped
+  app:
+    image: ghcr.io/larsauswsw/family-taskboard:latest
+    depends_on:
+      - db
+    environment:
+      DB_USER: ${DB_USER}
+      DB_PASSWORD: ${DB_PASSWORD}
+      DB_URL: jdbc:postgresql://db:5432/taskboard
+      VAPID_PUBLIC_KEY: ${VAPID_PUBLIC_KEY}
+      VAPID_PRIVATE_KEY: ${VAPID_PRIVATE_KEY}
+      VAPID_SUBJECT: ${VAPID_SUBJECT}
+    ports:
+      - "8080:8080"
+    restart: unless-stopped
+volumes:
+  dbdata:

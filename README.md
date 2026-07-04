@@ -27,6 +27,21 @@ The app is then reachable at `http://localhost:8080`. On first start it seeds a
 user `lars` with password `changeme` (see `grails-app/init/taskboard/BootStrap.groovy`) —
 change this password for anything beyond local testing.
 
+### Produktivbetrieb (mit dem veröffentlichten Image von ghcr.io)
+
+```bash
+cp .env.example .env
+# .env ausfüllen: DB_PASSWORD, VAPID_PUBLIC_KEY/VAPID_PRIVATE_KEY
+docker compose -f docker-compose.prod.yml pull
+docker compose -f docker-compose.prod.yml up -d
+```
+
+Nutzt das bei jedem Push auf `main` automatisch gebaute Image von
+`ghcr.io/larsauswsw/family-taskboard:latest` statt lokal zu bauen. Ein Update
+auf die neueste Version: den Pull-und-Up-Befehl erneut ausführen. HTTPS wird
+hier nicht mitgeliefert — dafür einen eigenen Reverse-Proxy (z.B. Nginx Proxy
+Manager) vor Port 8080 schalten.
+
 ### Locally, against Postgres
 
 ```bash
