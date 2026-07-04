@@ -8,7 +8,10 @@
     <script src="https://unpkg.com/htmx.org@2.0.3"></script>
 </head>
 <body>
-    <header class="navbar"><h1>Meine Tasks</h1></header>
+    <header class="navbar">
+        <h1>Meine Tasks</h1>
+        <a href="${createLink(controller: 'settings')}" aria-label="Einstellungen">⚙️</a>
+    </header>
 
     <details id="project-manage-section">
         <summary>Projekte verwalten</summary>

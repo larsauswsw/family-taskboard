@@ -17,3 +17,6 @@
 .recurrence-details { margin-top: 6px; font-size: 0.85em; }
 .recurrence-details summary { cursor: pointer; }
 .recurrence-form span { margin-right: 8px; }
+.settings-page { padding: 12px; }
+.token-display { font-family: monospace; font-size: 1.1em; padding: 8px;
+    width: 100%; max-width: 320px; box-sizing: border-box; margin-bottom: 12px; }

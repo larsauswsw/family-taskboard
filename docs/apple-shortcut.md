@@ -13,14 +13,11 @@ The Apple Shortcut automates the following workflow:
 
 ### 1. Get Your API Token
 
-There is no settings page for this yet (Phase 1 doesn't include one). Each
-`User` row has an `apiToken` seeded randomly on creation (see
-`grails-app/init/taskboard/BootStrap.groovy`); for now, read it directly from
-the database, e.g.:
-
-```sql
-SELECT username, api_token FROM app_user WHERE username = 'lars';
-```
+Log in to Taskboard and open **⚙️ Einstellungen** (top of the task list) --
+your API token is shown there, ready to copy. If you ever need to invalidate
+it (e.g. it leaked, or you just want a fresh one), click **"Token neu
+generieren"**; any Shortcut still using the old value will start getting 401
+errors until you paste in the new one.
 
 ### 2. Create the Shortcut
 
