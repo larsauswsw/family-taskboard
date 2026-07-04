@@ -203,4 +203,112 @@ class TaskServiceIntegrationSpec extends Specification {
         t.title == "Einkauf"
         t.project?.id == project.id
     }
+
+    void "complete on a task with an active recurrence rule creates the next occurrence"() {
+        given:
+        def u = new User(username: "rec-u1", password: "p",
+            displayName: "U", apiToken: "recu1").save(flush: true)
+        LocalDate original = LocalDate.now().plusDays(5)
+        def t = taskService.createTask([title: "Müll rausbringen",
+            dueDate: original, priority: Priority.LOW], u)
+        taskService.setRecurrence(t.id, RecurrenceType.WEEKLY, 1, null)
+
+        when:
+        taskService.complete(t.id)
+        def next = Task.findByTitleAndStatus("Müll rausbringen", TaskStatus.OPEN)
+
+        then:
+        next != null
+        next.dueDate == original.plusWeeks(1)
+        next.recurrenceRule.id == Task.get(t.id).recurrenceRule.id
+        next.priority == Priority.LOW
+    }
+
+    void "complete on a task with a stopped recurrence rule does not create a next occurrence"() {
+        given:
+        def u = new User(username: "rec-u2", password: "p",
+            displayName: "U", apiToken: "recu2").save(flush: true)
+        def t = taskService.createTask([title: "Stopped-Series-Task",
+            dueDate: LocalDate.now(), priority: Priority.LOW], u)
+        taskService.setRecurrence(t.id, RecurrenceType.DAILY, 1, null)
+        taskService.stopRecurrence(t.id)
+
+        when:
+        taskService.complete(t.id)
+
+        then:
+        Task.findAllByTitle("Stopped-Series-Task").size() == 1
+    }
+
+    void "complete on a task without a recurrence rule creates no next occurrence"() {
+        given:
+        def u = new User(username: "rec-u3", password: "p",
+            displayName: "U", apiToken: "recu3").save(flush: true)
+        def t = taskService.createTask([title: "Plain-Task",
+            dueDate: LocalDate.now(), priority: Priority.LOW], u)
+
+        when:
+        taskService.complete(t.id)
+
+        then:
+        Task.findAllByTitle("Plain-Task").size() == 1
+    }
+
+    void "setRecurrence creates a new active rule and links it to the task"() {
+        given:
+        def u = new User(username: "rec-u4", password: "p",
+            displayName: "U", apiToken: "recu4").save(flush: true)
+        def t = taskService.createTask([title: "x",
+            dueDate: LocalDate.now(), priority: Priority.LOW], u)
+
+        when:
+        def result = taskService.setRecurrence(t.id, RecurrenceType.MONTHLY, 2, null)
+
+        then:
+        result.recurrenceRule != null
+        result.recurrenceRule.type == RecurrenceType.MONTHLY
+        result.recurrenceRule.interval == 2
+        result.recurrenceRule.active
+        Task.get(t.id).recurrenceRule.type == RecurrenceType.MONTHLY
+    }
+
+    void "setRecurrence returns null for an unknown task id"() {
+        expect:
+        taskService.setRecurrence(-1L, RecurrenceType.DAILY, 1, null) == null
+    }
+
+    void "setRecurrence rejects an invalid rule and leaves the task without one"() {
+        given:
+        def u = new User(username: "rec-u5", password: "p",
+            displayName: "U", apiToken: "recu5").save(flush: true)
+        def t = taskService.createTask([title: "x",
+            dueDate: LocalDate.now(), priority: Priority.LOW], u)
+
+        when:
+        def result = taskService.setRecurrence(t.id, RecurrenceType.WEEKDAYS, 1, null)
+
+        then:
+        result == null
+        Task.get(t.id).recurrenceRule == null
+    }
+
+    void "stopRecurrence deactivates the rule so complete no longer regenerates"() {
+        given:
+        def u = new User(username: "rec-u6", password: "p",
+            displayName: "U", apiToken: "recu6").save(flush: true)
+        def t = taskService.createTask([title: "y",
+            dueDate: LocalDate.now(), priority: Priority.LOW], u)
+        taskService.setRecurrence(t.id, RecurrenceType.DAILY, 1, null)
+
+        when:
+        def result = taskService.stopRecurrence(t.id)
+
+        then:
+        !result.recurrenceRule.active
+    }
+
+    void "stopRecurrence returns null for an unknown task id"() {
+        expect:
+        taskService.stopRecurrence(-1L) == null
+    }
 }

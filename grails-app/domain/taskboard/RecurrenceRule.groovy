@@ -18,6 +18,10 @@ class RecurrenceRule {
     String weekdays
     boolean active = true
 
+    static mapping = {
+        interval column: 'interval_count' // "interval" is a reserved word in H2 (used by the test profile)
+    }
+
     static constraints = {
         type nullable: false
         interval nullable: false, min: 1

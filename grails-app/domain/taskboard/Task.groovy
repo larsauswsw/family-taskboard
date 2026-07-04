@@ -19,6 +19,11 @@ class Task {
     /** Optional grouping label (Phase 2). Plain reference, not GORM belongsTo --
      *  see Project's docblock. */
     Project project
+    /** Optional recurrence pattern. Plain reference, not GORM belongsTo --
+     *  same reasoning as Project: a rule is shared by every Task instance in
+     *  the same series and is never deleted, only deactivated. See
+     *  RecurrenceRule's docblock. */
+    RecurrenceRule recurrenceRule
     /** Set by the (not yet built) reminder scheduler to avoid re-notifying. */
     LocalDateTime lastNotifiedAt
     Date dateCreated
@@ -35,6 +40,7 @@ class Task {
         // itself does not enforce that a task has a creator.
         createdBy nullable: true
         project nullable: true
+        recurrenceRule nullable: true
         lastNotifiedAt nullable: true
     }
 }

@@ -9,6 +9,7 @@ class TaskService {
 
     PushService pushService
     DateParsingService dateParsingService
+    RecurrenceService recurrenceService
 
     /** Used identically by TaskController.quickAdd() and ApiTaskController.quick().
      *  If params.dueDate is absent/null, params.title is scanned for a recognized
@@ -59,15 +60,34 @@ class TaskService {
 
     /** Returns null (rather than throwing) for an id that no longer exists -- e.g. a
      *  stale HTMX card still on screen after the task was completed from another
-     *  device/tab. Callers re-render the current list either way. */
+     *  device/tab. Callers re-render the current list either way. If the completed
+     *  task has an active recurrence rule, spawns the next occurrence with its due
+     *  date computed from the PREVIOUS due date (not today), so a late completion
+     *  doesn't shift the series -- see design spec §3. Both saves flush explicitly
+     *  (same as ProjectService.delete()) because GORM integration tests run under
+     *  FlushMode.COMMIT: without an explicit flush, a caller querying by status
+     *  (e.g. Task.findByTitleAndStatus) right after complete() would still see the
+     *  pre-update DB row instead of this method's changes. */
     Task complete(Long id) {
         def t = Task.get(id)
         if (!t) return null
         t.status = TaskStatus.DONE
-        t.save(failOnError: true)
+        t.save(flush: true, failOnError: true)
         if (t.createdBy) {
             pushService.sendToUser(t.createdBy, "Task erledigt",
                 "'${t.title}' wurde als erledigt markiert")
+        }
+        if (t.recurrenceRule?.active) {
+            def next = new Task(
+                title: t.title,
+                dueDate: recurrenceService.nextDueDate(t.recurrenceRule, t.dueDate),
+                priority: t.priority,
+                assignedTo: t.assignedTo,
+                project: t.project,
+                recurrenceRule: t.recurrenceRule,
+                createdBy: t.createdBy
+            )
+            next.save(flush: true, failOnError: true)
         }
         t
     }
@@ -115,6 +135,34 @@ class TaskService {
         if (!t) return null
         t.project = project
         t.save(failOnError: true)
+        t
+    }
+
+    /** Creates a brand-new RecurrenceRule for the given task -- always a fresh
+     *  row, never reviving a previous, now-stopped rule (see design spec §4).
+     *  Returns null for an unknown task id or invalid rule input (interval < 1,
+     *  or type WEEKDAYS with no weekdays given) -- same validation pattern as
+     *  ProjectService.create()/update(), no exception thrown either way. */
+    Task setRecurrence(Long taskId, RecurrenceType type, Integer interval, String weekdays) {
+        def t = Task.get(taskId)
+        if (!t) return null
+        def rule = new RecurrenceRule(type: type, interval: interval ?: 1, weekdays: weekdays)
+        if (!rule.save()) return null
+        t.recurrenceRule = rule
+        t.save(failOnError: true)
+        t
+    }
+
+    /** Returns null (rather than throwing) for an unknown task id, same
+     *  defensive pattern as complete()/assignTask()/assignProject(). A task
+     *  with no recurrence rule is left unchanged (idempotent no-op). */
+    Task stopRecurrence(Long taskId) {
+        def t = Task.get(taskId)
+        if (!t) return null
+        if (t.recurrenceRule) {
+            t.recurrenceRule.active = false
+            t.recurrenceRule.save(failOnError: true)
+        }
         t
     }
 }
