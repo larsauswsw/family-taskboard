@@ -149,11 +149,18 @@ class RecurrenceFlowIntegrationSpec extends Specification {
         complete2.outputStream.withWriter { it << "" }
         complete2.responseCode
 
-        then: "no third occurrence was created -- still only the two prior tasks, both now DONE"
+        and: "reading back final task state"
+        int finalCount
+        boolean allDone
         Task.withTransaction {
             def all = Task.findAllByTitle("Recurrence-Flow-Task")
-            all.size() == 2 && all.every { it.status == TaskStatus.DONE }
+            finalCount = all.size()
+            allDone = all.every { it.status == TaskStatus.DONE }
         }
+
+        then: "no third occurrence was created -- still only the two prior tasks, both now DONE"
+        finalCount == 2
+        allDone
 
         cleanup:
         Task.withTransaction { Task.findAllByTitle("Recurrence-Flow-Task")*.delete(flush: true) }
