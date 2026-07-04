@@ -1,0 +1,11 @@
+{
+  "version": "0.0.1",
+  "configurations": [
+    {
+      "name": "taskboard-bootrun-test",
+      "runtimeExecutable": "./gradlew",
+      "runtimeArgs": ["bootRun", "-Dgrails.env=test"],
+      "port": 8080
+    }
+  ]
+}

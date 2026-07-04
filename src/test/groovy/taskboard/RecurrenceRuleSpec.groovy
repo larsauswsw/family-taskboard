@@ -36,4 +36,19 @@ class RecurrenceRuleSpec extends Specification implements DomainUnitTest<Recurre
         expect:
         new RecurrenceRule(type: RecurrenceType.DAILY, interval: 1).active
     }
+
+    void "WEEKDAYS type with unparseable token is invalid"() {
+        expect:
+        !new RecurrenceRule(type: RecurrenceType.WEEKDAYS, interval: 1, weekdays: "Someday").validate(['weekdays'])
+    }
+
+    void "WEEKDAYS type with trailing comma producing empty token is invalid"() {
+        expect:
+        !new RecurrenceRule(type: RecurrenceType.WEEKDAYS, interval: 1, weekdays: "MONDAY,").validate(['weekdays'])
+    }
+
+    void "WEEKDAYS type with valid comma-separated tokens is valid"() {
+        expect:
+        new RecurrenceRule(type: RecurrenceType.WEEKDAYS, interval: 1, weekdays: "MONDAY,THURSDAY").validate(['weekdays'])
+    }
 }
