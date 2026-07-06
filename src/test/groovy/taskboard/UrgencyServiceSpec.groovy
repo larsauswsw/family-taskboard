@@ -30,4 +30,21 @@ class UrgencyServiceSpec extends Specification implements ServiceUnitTest<Urgenc
         -1   | Priority.LOW     | 'darkred'
         6    | Priority.CRITICAL| 'orange'
     }
+
+    @Unroll
+    void "#daysOut days out gets bucket #expected"() {
+        given:
+        def today = LocalDate.of(2026,1,1)
+
+        expect:
+        service.bucketFor(task(daysOut, Priority.LOW), today) == expected
+
+        where:
+        daysOut | expected
+        -1      | "Überfällig"
+        0       | "Heute"
+        1       | "Diese Woche"
+        6       | "Diese Woche"
+        7       | "Später"
+    }
 }

@@ -25,4 +25,16 @@ class UrgencyService {
         if (eff >= cfg.orangeDaysThreshold) return 'orange'
         return 'red'
     }
+
+    /** Groups a task by how far out its due date is, for the task-list's
+     *  section headers -- purely additive to colorFor()/effectiveDays(),
+     *  does not affect the color logic. Boundaries: <0 days overdue, 0 days
+     *  is "today", 1-6 days is "this week" (inclusive), 7+ is "later". */
+    String bucketFor(Task task, LocalDate today) {
+        long daysOut = ChronoUnit.DAYS.between(today, task.dueDate)
+        if (daysOut < 0) return "Überfällig"
+        if (daysOut == 0) return "Heute"
+        if (daysOut <= 6) return "Diese Woche"
+        return "Später"
+    }
 }
