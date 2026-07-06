@@ -4,7 +4,7 @@
 
 **Goal:** Replace the app's ad-hoc, unstyled base look with a consistent "Signalsystem" design (self-hosted Inter/JetBrains Mono typography, light+dark color tokens, rounded cards/pills/buttons) and redesign the task list to group tasks by due-date bucket (Überfällig/Heute/Diese Woche/Später) instead of a flat chain.
 
-**Architecture:** A new `_tokens.css` partial defines all colors as CSS custom properties (light default + `@media (prefers-color-scheme: dark)` override + a `data-theme` attribute override for the manual toggle), included via `//= require` at the top of `taskboard.css`, which is rewritten to use the tokens for every component rule. `UrgencyService` gains a `bucketFor()` method (same deterministic `today`-parameter pattern as the existing `colorFor()`) that `_list.gsp` uses to group the already-sorted task list. `Priority` gains a `germanLabel` field. A small inline script in `index.gsp` handles the manual dark-mode toggle via `localStorage`.
+**Architecture:** A new `_tokens.css` partial defines all colors as CSS custom properties (light default + `@media (prefers-color-scheme: dark)` override + a `data-theme` attribute override for the manual toggle), included via a `*= require` directive at the top of `taskboard.css`, which is rewritten to use the tokens for every component rule. `UrgencyService` gains a `bucketFor()` method (same deterministic `today`-parameter pattern as the existing `colorFor()`) that `_list.gsp` uses to group the already-sorted task list. `Priority` gains a `germanLabel` field. A small inline script in `index.gsp` handles the manual dark-mode toggle via `localStorage`.
 
 **Tech Stack:** Grails 7.1.1, GORM, Spock (unit), CSS custom properties, self-hosted `.woff2` fonts — no new runtime dependencies.
 
@@ -26,7 +26,7 @@
 - Create: `grails-app/assets/fonts/inter/inter-400.woff2`, `inter-600.woff2`, `inter-700.woff2`
 - Create: `grails-app/assets/fonts/jetbrains-mono/jetbrains-mono-400.woff2`
 - Create: `grails-app/assets/stylesheets/_tokens.css`
-- Modify: `grails-app/assets/stylesheets/taskboard.css` (add `//= require` line at the very top)
+- Modify: `grails-app/assets/stylesheets/taskboard.css` (add `*= require` directive at the very top)
 
 **Interfaces:**
 - Consumes: nothing (foundational).
@@ -174,7 +174,9 @@ Create `grails-app/assets/stylesheets/_tokens.css`:
 In `grails-app/assets/stylesheets/taskboard.css`, add this as the very first line (before any existing rule):
 
 ```css
-//= require _tokens
+/*
+*= require _tokens
+*/
 ```
 
 - [ ] **Step 5: Commit**
@@ -408,7 +410,9 @@ Replace the full contents of `grails-app/views/task/_list.gsp` with:
 Replace the full contents of `grails-app/assets/stylesheets/taskboard.css` with:
 
 ```css
-//= require _tokens
+/*
+*= require _tokens
+*/
 
 body {
     margin: 0;
