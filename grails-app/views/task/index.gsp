@@ -32,8 +32,8 @@
                 <option value="${p.id}">${p.name}</option>
             </g:each>
         </select>
-        <button type="button" id="mic-btn" class="fab" aria-label="Per Sprache hinzufügen">🎤</button>
-        <button type="submit">+</button>
+        <button type="button" id="mic-btn" class="fab round-btn" aria-label="Per Sprache hinzufügen">🎤</button>
+        <button type="submit" class="round-btn">+</button>
     </form>
 
     <!-- Session routes keep CSRF protection (see SecurityConfig.groovy); HTMX's

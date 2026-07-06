@@ -2,21 +2,57 @@
 *= require _tokens
 */
 
-.task-card { border-left: 4px solid; padding: 10px 12px; margin: 8px;
-    border-radius: 12px; background: #fff; }
-.task-card.green   { border-left-color: #3B6D11; }
-.task-card.yellow  { border-left-color: #BA7517; }
-.task-card.orange  { border-left-color: #D85A30; }
-.task-card.red     { border-left-color: #E24B4A; }
-.task-card.darkred { border-left-color: #791F1F; }
-.fab { position: fixed; bottom: 16px; right: 16px; width: 56px; height: 56px;
-    border-radius: 50%; font-size: 22px; }
-.project-chip { display: inline-block; padding: 2px 8px; border-radius: 10px;
+body {
+    margin: 0;
+    font-family: 'Inter', system-ui, sans-serif;
+    background: var(--color-bg);
+    color: var(--color-text);
+}
+
+.navbar { display: flex; justify-content: space-between; align-items: center;
+    padding: 16px; gap: 12px; }
+.navbar h1 { font-size: 24px; font-weight: 700; margin: 0; }
+
+.bucket-label { font-size: 12px; font-weight: 700; letter-spacing: 1.5px;
+    text-transform: uppercase; color: var(--color-text-muted); margin: 16px 8px 8px; }
+
+.task-card { border-left: 5px solid; padding: 12px 16px; margin: 8px;
+    border-radius: 12px; background: var(--color-surface); box-shadow: var(--shadow-card); }
+.task-card.green   { border-left-color: var(--color-urgency-green); }
+.task-card.yellow  { border-left-color: var(--color-urgency-yellow); }
+.task-card.orange  { border-left-color: var(--color-urgency-orange); }
+.task-card.red     { border-left-color: var(--color-urgency-red); }
+.task-card.darkred { border-left-color: var(--color-urgency-darkred); }
+.task-title { font-size: 15px; font-weight: 600; color: var(--color-text); margin: 0; }
+.task-meta { font-family: 'JetBrains Mono', monospace; font-size: 11px;
+    color: var(--color-text-muted); display: flex; align-items: center; gap: 8px; margin-top: 6px; }
+
+.round-btn { border-radius: 50%; border: none; background: var(--color-text);
+    color: var(--color-bg); font-size: 20px; width: 44px; height: 44px;
+    display: inline-flex; align-items: center; justify-content: center; }
+.fab { position: fixed; bottom: 16px; right: 16px; width: 56px; height: 56px; font-size: 22px; }
+
+.badge { font-family: 'Inter', system-ui, sans-serif; background: var(--color-pill-bg);
+    color: var(--color-pill-text); border-radius: 6px; padding: 2px 6px; font-size: 11px; }
+
+.project-chip { display: inline-block; padding: 2px 10px; border-radius: 999px;
     font-size: 0.75em; color: #fff; margin-bottom: 4px; }
-.project-pill { display: inline-block; padding: 4px 10px; margin: 2px;
-    border-radius: 12px; background: #ddd; text-decoration: none; color: #222;
-    font-size: 0.85em; }
-.project-pill.active { outline: 2px solid #222; font-weight: bold; }
+.project-pill { display: inline-block; padding: 4px 12px; margin: 2px;
+    border-radius: 999px; background: var(--color-pill-bg); text-decoration: none;
+    color: var(--color-pill-text); font-size: 0.85em; }
+.project-pill.active { background: var(--color-pill-active-bg);
+    color: var(--color-pill-active-text); font-weight: bold; }
+
+input[type="text"], input[type="number"], select {
+    border-radius: 8px; border: 1px solid var(--color-pill-bg);
+    background: var(--color-surface); color: var(--color-text); padding: 8px 12px;
+    font-family: 'Inter', system-ui, sans-serif;
+}
+button[type="submit"] {
+    border-radius: 8px; border: none; background: var(--color-text);
+    color: var(--color-bg); padding: 8px 16px; font-family: 'Inter', system-ui, sans-serif;
+}
+
 .recurrence-badge { margin-left: 4px; }
 .recurrence-details { margin-top: 6px; font-size: 0.85em; }
 .recurrence-details summary { cursor: pointer; }

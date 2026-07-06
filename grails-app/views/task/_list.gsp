@@ -11,7 +11,10 @@
            hx-target="#task-list" hx-swap="innerHTML">${p.name}</a>
     </g:each>
 </div>
-<g:each in="${tasks}" var="task">
-    <g:render template="card"
-        model="[task: task, color: urgencyService.colorFor(task, today), users: users, projects: projects]"/>
+<g:each in="${tasks.groupBy { urgencyService.bucketFor(it, today) }}" var="bucketEntry">
+    <div class="bucket-label">${bucketEntry.key}</div>
+    <g:each in="${bucketEntry.value}" var="task">
+        <g:render template="card"
+            model="[task: task, color: urgencyService.colorFor(task, today), users: users, projects: projects]"/>
+    </g:each>
 </g:each>
