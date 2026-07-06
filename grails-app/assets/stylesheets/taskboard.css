@@ -1,3 +1,5 @@
+//= require _tokens
+
 .task-card { border-left: 4px solid; padding: 10px 12px; margin: 8px;
     border-radius: 12px; background: #fff; }
 .task-card.green   { border-left-color: #3B6D11; }
