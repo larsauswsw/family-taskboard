@@ -21,7 +21,7 @@
             </g:each>
         </select>
         <span><g:formatDate date="${java.sql.Date.valueOf(task.dueDate)}" format="dd.MM."/></span>
-        <span class="badge">${task.priority}</span>
+        <span class="badge">${task.priority.germanLabel}</span>
         <g:if test="${task.recurrenceRule?.active}">
             <span class="recurrence-badge" title="Wiederholt sich">🔁</span>
         </g:if>
