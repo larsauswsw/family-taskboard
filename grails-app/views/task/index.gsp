@@ -11,11 +11,6 @@
 <body>
     <g:render template="/common/navbar" model="[title: 'Meine Tasks', linkHome: false]"/>
 
-    <details id="project-manage-section">
-        <summary>Projekte verwalten</summary>
-        <g:render template="/project/manage" model="[projects: projects, error: null]"/>
-    </details>
-
     <main id="task-list">
         <g:render template="list"
             model="[tasks: tasks, urgencyService: urgencyService, today: today, users: users, projects: projects, selectedProject: selectedProject]"/>
