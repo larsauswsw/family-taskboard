@@ -9,10 +9,48 @@
   const SR = window.SpeechRecognition || window.webkitSpeechRecognition;
   if (!SR) { btn.style.display = 'none'; return; } // no Web Speech API support
 
-  const recognition = new SR();
-  recognition.lang = 'de-DE';
-  recognition.interimResults = false;
-  recognition.maxAlternatives = 1;
+  // A fresh instance is created for every start/stop cycle (see createRecognition
+  // below) rather than reusing one instance for the page's lifetime. Safari has been
+  // observed to keep its microphone-in-use indicator lit after stop() when an instance
+  // is reused across sessions; recreating it is a workaround for that WebKit quirk.
+  let recognition = null;
+
+  // Safari only seems to fully release the microphone indicator when the page itself
+  // calls stop()/abort() on the recognition object. When recognition ends on its own
+  // (a final result arrives, or a no-speech timeout fires) without that explicit call,
+  // the 'end' event still fires and our UI resets correctly, but Safari's audio
+  // session/indicator can be left dangling. Calling stop() again here is a no-op per
+  // spec once recognition has already produced a result or errored out, but nudges
+  // Safari into releasing the microphone the same way a manual stop-button press does.
+  function forceStop(r) {
+    try { r.stop(); } catch (err) { /* already stopped */ }
+  }
+
+  function createRecognition() {
+    const r = new SR();
+    r.lang = 'de-DE';
+    r.interimResults = false;
+    r.maxAlternatives = 1;
+
+    r.addEventListener('result', function (e) {
+      input.value = e.results[0][0].transcript;
+      forceStop(r);
+      goIdle();
+      input.focus();
+    });
+
+    r.addEventListener('end', function () {
+      if (state === 'listening') { goIdle(); }
+    });
+
+    r.addEventListener('error', function (e) {
+      if (manualStop && e.error === 'aborted') { return; }
+      forceStop(r);
+      goError(ERROR_MESSAGES[e.error] || DEFAULT_ERROR_MESSAGE);
+    });
+
+    return r;
+  }
 
   const IDLE_PLACEHOLDER = 'Neuer Task…';
   const ERROR_MESSAGES = {
@@ -69,6 +107,7 @@
     timerId = setInterval(function () {
       input.placeholder = 'Höre zu… (' + formatElapsed(Date.now() - startTime) + ')';
     }, 1000);
+    recognition = createRecognition();
     recognition.start();
   }
 
@@ -89,20 +128,5 @@
     } else {
       goListening();
     }
-  });
-
-  recognition.addEventListener('result', function (e) {
-    input.value = e.results[0][0].transcript;
-    goIdle();
-    input.focus();
-  });
-
-  recognition.addEventListener('end', function () {
-    if (state === 'listening') { goIdle(); }
-  });
-
-  recognition.addEventListener('error', function (e) {
-    if (manualStop && e.error === 'aborted') { return; }
-    goError(ERROR_MESSAGES[e.error] || DEFAULT_ERROR_MESSAGE);
   });
 })();
