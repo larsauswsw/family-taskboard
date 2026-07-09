@@ -5,16 +5,11 @@
     <link rel="manifest" href="/manifest.json">
     <title>Meine Tasks</title>
     <asset:stylesheet src="taskboard.css"/>
+    <g:render template="/common/themeInit"/>
     <script src="https://unpkg.com/htmx.org@2.0.3"></script>
 </head>
 <body>
-    <header class="navbar">
-        <h1>Meine Tasks</h1>
-        <div style="display:flex;gap:8px;align-items:center;">
-            <button type="button" id="theme-toggle" aria-label="Darstellung umschalten">🌙</button>
-            <a href="${createLink(controller: 'settings')}" aria-label="Einstellungen">⚙️</a>
-        </div>
-    </header>
+    <g:render template="/common/navbar" model="[title: 'Meine Tasks', linkHome: false]"/>
 
     <details id="project-manage-section">
         <summary>Projekte verwalten</summary>
@@ -38,25 +33,6 @@
         <button type="button" id="mic-btn" class="fab round-btn" aria-label="Per Sprache hinzufügen">🎤</button>
         <button type="submit" class="round-btn">+</button>
     </form>
-
-    <script>
-    (function () {
-        const btn = document.getElementById('theme-toggle');
-        const stored = localStorage.getItem('taskboard-theme');
-        if (stored) {
-            document.documentElement.setAttribute('data-theme', stored);
-            btn.textContent = stored === 'dark' ? '☀️' : '🌙';
-        }
-        btn.addEventListener('click', function () {
-            const prefersDark = window.matchMedia('(prefers-color-scheme: dark)').matches;
-            const current = document.documentElement.getAttribute('data-theme') || (prefersDark ? 'dark' : 'light');
-            const next = current === 'dark' ? 'light' : 'dark';
-            document.documentElement.setAttribute('data-theme', next);
-            localStorage.setItem('taskboard-theme', next);
-            btn.textContent = next === 'dark' ? '☀️' : '🌙';
-        });
-    })();
-    </script>
 
     <!-- Session routes keep CSRF protection (see SecurityConfig.groovy); HTMX's
          own POSTs don't carry it automatically, so echo the cookie as a header. -->
