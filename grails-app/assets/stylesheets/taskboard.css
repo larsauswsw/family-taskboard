@@ -69,6 +69,9 @@ button[type="submit"] {
 .recurrence-details { margin-top: 6px; font-size: 0.85em; }
 .recurrence-details summary { cursor: pointer; }
 .recurrence-form span { margin-right: 8px; }
-.settings-page { padding: 12px; }
+.settings-page { padding: 16px; max-width: 480px; }
+.settings-page p { margin: 0 0 8px; }
 .token-display { font-family: monospace; font-size: 1.1em; padding: 8px;
-    width: 100%; max-width: 320px; box-sizing: border-box; margin-bottom: 12px; }
+    width: 100%; max-width: 320px; box-sizing: border-box; margin-bottom: 12px;
+    border-radius: 8px; border: 1px solid var(--color-pill-bg);
+    background: var(--color-surface); color: var(--color-text); }

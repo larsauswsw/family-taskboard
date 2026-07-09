@@ -4,12 +4,10 @@
     <meta name="viewport" content="width=device-width, initial-scale=1">
     <title>Einstellungen</title>
     <asset:stylesheet src="taskboard.css"/>
+    <g:render template="/common/themeInit"/>
 </head>
 <body>
-    <header class="navbar">
-        <h1>Einstellungen</h1>
-        <a href="${createLink(controller: 'task')}">← Zurück</a>
-    </header>
+    <g:render template="/common/navbar" model="[title: 'Einstellungen', linkHome: true]"/>
 
     <main class="settings-page">
         <p><strong>Benutzername:</strong> ${user.username}</p>
