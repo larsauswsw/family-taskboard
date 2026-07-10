@@ -1,9 +1,17 @@
 <div class="task-card ${color}">
     <p class="task-title">${task.title}</p>
-    <g:if test="${task.project}">
-        <span class="project-chip" style="background-color: ${task.project.color};">${task.project.name}</span>
-    </g:if>
-    <div class="task-meta">
+    <button class="complete-btn" hx-post="${createLink(action: 'complete', id: task.id)}"
+            hx-target="#task-list" hx-swap="innerHTML" aria-label="Als erledigt markieren">✓</button>
+    <div class="task-row-assign">
+        <select name="project" class="project-select"
+                style="background-color: ${task.project ? task.project.color : 'var(--color-pill-bg)'}; color: ${task.project ? '#fff' : 'var(--color-pill-text)'};"
+                hx-post="${createLink(action: 'assignProject', id: task.id)}"
+                hx-target="#task-list" hx-swap="innerHTML" hx-trigger="change">
+            <option value="" ${task.project ? '' : 'selected'}>—</option>
+            <g:each in="${projects}" var="p">
+                <option value="${p.id}" ${task.project?.id == p.id ? 'selected' : ''}>${p.name}</option>
+            </g:each>
+        </select>
         <select name="assignedTo" class="assignee-select"
                 hx-post="${createLink(action: 'assign', id: task.id)}"
                 hx-target="#task-list" hx-swap="innerHTML" hx-trigger="change">
@@ -12,24 +20,21 @@
                 <option value="${u.id}" ${task.assignedTo?.id == u.id ? 'selected' : ''}>${u.displayName}</option>
             </g:each>
         </select>
-        <select name="project" class="project-select"
-                hx-post="${createLink(action: 'assignProject', id: task.id)}"
-                hx-target="#task-list" hx-swap="innerHTML" hx-trigger="change">
-            <option value="" ${task.project ? '' : 'selected'}>Kein Projekt</option>
-            <g:each in="${projects}" var="p">
-                <option value="${p.id}" ${task.project?.id == p.id ? 'selected' : ''}>${p.name}</option>
-            </g:each>
-        </select>
-        <span><g:formatDate date="${java.sql.Date.valueOf(task.dueDate)}" format="dd.MM."/></span>
+    </div>
+    <div class="task-row-facts">
+        <span class="badge"><g:formatDate date="${java.sql.Date.valueOf(task.dueDate)}" format="dd.MM."/></span>
         <span class="badge">${task.priority.germanLabel}</span>
         <g:if test="${task.recurrenceRule?.active}">
-            <span class="recurrence-badge" title="Wiederholt sich">🔁</span>
+            <span class="badge recur-chip" title="Wiederholt sich">
+                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="17 1 21 5 17 9"/><path d="M3 11V9a4 4 0 0 1 4-4h14"/><polyline points="7 23 3 19 7 15"/><path d="M21 13v2a4 4 0 0 1-4 4H3"/></svg>
+            </span>
         </g:if>
-        <button hx-post="${createLink(action: 'complete', id: task.id)}"
-                hx-target="#task-list" hx-swap="innerHTML">✓</button>
+        <g:else>
+            <span></span>
+        </g:else>
     </div>
     <details class="recurrence-details">
-        <summary>🔁 Wiederholung</summary>
+        <summary><svg class="recur-icon-inline" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="17 1 21 5 17 9"/><path d="M3 11V9a4 4 0 0 1 4-4h14"/><polyline points="7 23 3 19 7 15"/><path d="M21 13v2a4 4 0 0 1-4 4H3"/></svg>Wiederholung</summary>
         <g:if test="${task.recurrenceRule?.active}">
             <p class="recurrence-summary">Wiederholt sich: ${task.recurrenceRule.type}</p>
             <form hx-post="${createLink(action: 'stopRecurrence', id: task.id)}"
