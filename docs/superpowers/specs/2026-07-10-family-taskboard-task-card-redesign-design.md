@@ -67,7 +67,10 @@ missing value leaves an empty slot rather than shifting other chips:
 **Row 1** — `grid-template-columns: minmax(0,1fr) 68px;`
 - Column 1: project chip — the `project-select` element itself, styled to look like a solid chip
   (`background: task.project.color` inline style as today, white text, no visible border/arrow,
-  `text-align: left`). Empty/invisible when `task.project` is null.
+  `text-align: left`). When `task.project` is null, renders as a visible, tappable muted "—" chip
+  (same styling as the assignee column's empty state) rather than being invisible — see the
+  implementation plan's Global Constraints for why: the select is the only card-level control that
+  can assign a project to a project-less task, so hiding it would remove that capability.
 - Column 2: assignee chip — the `assignedTo-select` element, styled as a neutral pill
   (`--color-pill-bg` / `--color-pill-text`, same tokens as `.badge`/`.pill` today). Shows "—" when
   unassigned (already the existing placeholder option).
@@ -103,8 +106,9 @@ chip.
 
 ### 7. Edge cases
 
-- **No project:** row 1 column 1 renders the select with empty content — kept as an invisible/empty
-  slot (not removed from the grid) so the assignee chip in column 2 stays in its fixed position.
+- **No project:** row 1 column 1 renders the select as a visible, tappable muted "—" chip (not
+  invisible — see §4) so the assignee chip in column 2 stays in its fixed position and the project
+  select remains usable.
 - **Unassigned:** existing "—" placeholder option, shown in the neutral chip style.
 - **No recurrence:** row 2 column 3 is empty; columns 1–2 keep their fixed width and position
   regardless.
