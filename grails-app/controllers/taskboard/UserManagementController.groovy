@@ -5,9 +5,9 @@ import org.springframework.security.core.context.SecurityContextHolder
 /**
  * Admin-only CRUD for family member accounts. No @Secured annotation here --
  * SecurityConfig's requestMatchers('/userManagement/**').hasRole('ADMIN')
- * already blocks non-admins with a 403 (redirected to /login/denied) before
- * any action runs, same enforcement style as TaskController/SettingsController
- * relying on SecurityConfig for authentication.
+ * already blocks non-admins with a 403 (server-side forward to /login/denied)
+ * before any action runs, same enforcement style as TaskController/
+ * SettingsController relying on SecurityConfig for authentication.
  */
 class UserManagementController {
 
