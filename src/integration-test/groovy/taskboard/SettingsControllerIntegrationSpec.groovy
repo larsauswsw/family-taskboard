@@ -4,6 +4,7 @@ import grails.testing.mixin.integration.Integration
 import spock.lang.Specification
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.boot.web.servlet.context.ServletWebServerApplicationContext
+import org.springframework.security.crypto.password.PasswordEncoder
 
 /**
  * Exercises SettingsController over real HTTP, same login-flow pattern as
@@ -19,6 +20,9 @@ class SettingsControllerIntegrationSpec extends Specification {
 
     @Autowired
     ServletWebServerApplicationContext applicationContext
+
+    @Autowired
+    PasswordEncoder passwordEncoder
 
     Integer getServerPort() {
         applicationContext.webServer.port
@@ -37,6 +41,10 @@ class SettingsControllerIntegrationSpec extends Specification {
     }
 
     private Map<String, String> loggedInCookies() {
+        loggedInCookies("lars", "changeme")
+    }
+
+    private Map<String, String> loggedInCookies(String username, String password) {
         Map<String, String> cookies = [:]
         def initial = new URL("http://localhost:${serverPort}/login/auth").openConnection()
         initial.instanceFollowRedirects = false
@@ -50,7 +58,8 @@ class SettingsControllerIntegrationSpec extends Specification {
         login.setRequestProperty("Cookie", cookieHeader(cookies))
         login.setRequestProperty("Content-Type", "application/x-www-form-urlencoded")
         String csrfToken = cookies['XSRF-TOKEN']
-        String form = "username=lars&password=changeme&_csrf=${URLEncoder.encode(csrfToken, 'UTF-8')}"
+        String form = "username=${username}&password=${URLEncoder.encode(password, 'UTF-8')}" +
+            "&_csrf=${URLEncoder.encode(csrfToken, 'UTF-8')}"
         login.outputStream.withWriter { it << form }
         login.responseCode
         extractCookies(login, cookies)
@@ -119,5 +128,66 @@ class SettingsControllerIntegrationSpec extends Specification {
             lars.apiToken = originalToken
             lars.save(flush: true, failOnError: true)
         }
+    }
+
+    void "changing password with a wrong current password shows an error and keeps the old password"() {
+        given: "a dedicated test user, not the seeded 'lars' account"
+        User.withTransaction {
+            new User(username: "settings-pw1", password: passwordEncoder.encode("original-pw"),
+                displayName: "PW Test", apiToken: "settings-pw1-t").save(flush: true)
+        }
+        Map<String, String> cookies = loggedInCookies("settings-pw1", "original-pw")
+
+        when:
+        def conn = new URL("http://localhost:${serverPort}/settings/changePassword").openConnection()
+        conn.requestMethod = "POST"
+        conn.doOutput = true
+        conn.instanceFollowRedirects = false
+        conn.setRequestProperty("Cookie", cookieHeader(cookies))
+        conn.setRequestProperty("Content-Type", "application/x-www-form-urlencoded")
+        String csrfToken = cookies['XSRF-TOKEN']
+        String form = "currentPassword=wrong-pw&newPassword=new-password-1&newPasswordConfirm=new-password-1" +
+            "&_csrf=${URLEncoder.encode(csrfToken, 'UTF-8')}"
+        conn.outputStream.withWriter { it << form }
+        int status = conn.responseCode
+
+        then:
+        status == 302
+        User.withTransaction {
+            passwordEncoder.matches("original-pw", User.findByUsername("settings-pw1").password)
+        }
+
+        cleanup:
+        User.withTransaction { User.findByUsername("settings-pw1")?.delete(flush: true) }
+    }
+
+    void "changing password with matching confirmation updates the password"() {
+        given:
+        User.withTransaction {
+            new User(username: "settings-pw2", password: passwordEncoder.encode("original-pw"),
+                displayName: "PW Test", apiToken: "settings-pw2-t").save(flush: true)
+        }
+        Map<String, String> cookies = loggedInCookies("settings-pw2", "original-pw")
+
+        when:
+        def conn = new URL("http://localhost:${serverPort}/settings/changePassword").openConnection()
+        conn.requestMethod = "POST"
+        conn.doOutput = true
+        conn.instanceFollowRedirects = false
+        conn.setRequestProperty("Cookie", cookieHeader(cookies))
+        conn.setRequestProperty("Content-Type", "application/x-www-form-urlencoded")
+        String csrfToken = cookies['XSRF-TOKEN']
+        String form = "currentPassword=original-pw&newPassword=new-password-1&newPasswordConfirm=new-password-1" +
+            "&_csrf=${URLEncoder.encode(csrfToken, 'UTF-8')}"
+        conn.outputStream.withWriter { it << form }
+        conn.responseCode
+
+        then:
+        User.withTransaction {
+            passwordEncoder.matches("new-password-1", User.findByUsername("settings-pw2").password)
+        }
+
+        cleanup:
+        User.withTransaction { User.findByUsername("settings-pw2")?.delete(flush: true) }
     }
 }

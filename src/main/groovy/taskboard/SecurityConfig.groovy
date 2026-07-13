@@ -62,6 +62,9 @@ class SecurityConfig {
                 // permitted too or the forwarded request gets redirected to login.
                 auth.requestMatchers('/assets/**', '/static/**', '/manifest.json', '/sw.js', '/error',
                                      '/login/**', '/logout/**', '/api/**').permitAll()
+                // Family member management is admin-only; everything else just
+                // needs any authenticated user (see below).
+                auth.requestMatchers('/userManagement/**').hasRole('ADMIN')
                 auth.anyRequest().authenticated()
             }
             .formLogin { form ->
@@ -70,6 +73,9 @@ class SecurityConfig {
             }
             .logout { logout ->
                 logout.logoutUrl('/logout').logoutSuccessUrl('/login/auth')
+            }
+            .exceptionHandling { handling ->
+                handling.accessDeniedPage('/login/denied')
             }
             // CSRF on for session forms; off for /api/** which uses Bearer token auth.
             // Uses the plain (non-Xor) request handler: Spring Security 6's default

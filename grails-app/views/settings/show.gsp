@@ -20,6 +20,26 @@
             <input type="hidden" name="${_csrf.parameterName}" value="${_csrf.token}">
             <button type="submit">Token neu generieren</button>
         </form>
+
+        <h2>Passwort ändern</h2>
+        <g:if test="${flash.passwordError}">
+            <p class="login-error">${flash.passwordError}</p>
+        </g:if>
+        <g:if test="${flash.passwordSuccess}">
+            <p>${flash.passwordSuccess}</p>
+        </g:if>
+        <form method="post" action="${createLink(action: 'changePassword')}">
+            <input type="hidden" name="${_csrf.parameterName}" value="${_csrf.token}">
+            <input type="password" name="currentPassword" placeholder="Aktuelles Passwort" required><br>
+            <input type="password" name="newPassword" placeholder="Neues Passwort (mind. 8 Zeichen)" required><br>
+            <input type="password" name="newPasswordConfirm" placeholder="Neues Passwort bestätigen" required><br>
+            <button type="submit">Passwort ändern</button>
+        </form>
+
+        <g:if test="${user.admin}">
+            <h2>Familie</h2>
+            <a href="${createLink(controller: 'userManagement')}">Nutzerverwaltung</a>
+        </g:if>
     </main>
 </body>
 </html>

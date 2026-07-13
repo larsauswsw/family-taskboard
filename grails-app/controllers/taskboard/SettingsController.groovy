@@ -29,4 +29,17 @@ class SettingsController {
         userService.regenerateApiToken(currentUser())
         redirect action: 'show'
     }
+
+    /** Redirect-after-POST, same reasoning as regenerateToken; the result is
+     *  carried via flash so the page never re-submits the password fields. */
+    def changePassword() {
+        String error = userService.changeOwnPassword(currentUser(), params.currentPassword,
+            params.newPassword, params.newPasswordConfirm)
+        if (error) {
+            flash.passwordError = error
+        } else {
+            flash.passwordSuccess = 'Passwort geändert.'
+        }
+        redirect action: 'show'
+    }
 }

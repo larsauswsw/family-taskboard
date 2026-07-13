@@ -17,7 +17,7 @@ class BootStrap {
             def encoder = new BCryptPasswordEncoder()
             // Change this password before running anywhere beyond local testing.
             new User(username: 'lars', password: encoder.encode('changeme'),
-                displayName: 'Lars', apiToken: UUID.randomUUID().toString()).save(flush: true)
+                displayName: 'Lars', apiToken: UUID.randomUUID().toString(), admin: true).save(flush: true)
         }
     }
 
