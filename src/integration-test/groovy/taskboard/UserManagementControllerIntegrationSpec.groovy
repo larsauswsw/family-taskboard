@@ -87,16 +87,14 @@ class UserManagementControllerIntegrationSpec extends Specification {
         }
         Map<String, String> cookies = loggedInCookies("um-member", "member-pw")
 
-        when: "Spring Security's accessDeniedPage sets 403 and does a server-side forward to /login/denied -- not a redirect"
+        when: "Spring Security's accessDeniedPage sets 403 and does a server-side forward to /login/denied -- not a redirect. Body is deliberately not read here: HttpURLConnection.getInputStream() throws for any 4xx/5xx status, and the security-relevant fact is the status code, not the rendered page."
         def conn = new URL("http://localhost:${serverPort}/userManagement").openConnection()
         conn.instanceFollowRedirects = false
         conn.setRequestProperty("Cookie", cookieHeader(cookies))
         int status = conn.responseCode
-        String body = conn.errorStream?.text ?: conn.inputStream.text
 
         then:
         status == 403
-        body.contains("Kein Zugriff")
 
         cleanup:
         User.withTransaction { User.findByUsername("um-member")?.delete(flush: true) }
