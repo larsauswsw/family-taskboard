@@ -76,6 +76,23 @@ class TaskController {
             projects: Project.list(), selectedProject: null]
     }
 
+    /** Reachable from the due-date <input type="date"> in _card.gsp. */
+    def updateDueDate(Long id) {
+        taskService.updateDueDate(id, LocalDate.parse(params.dueDate))
+        render template: 'list', model: [tasks: taskService.openTasksSorted(),
+            urgencyService: urgencyService, today: LocalDate.now(), users: User.list(),
+            projects: Project.list(), selectedProject: null]
+    }
+
+    /** Reachable from the priority <select> in _card.gsp; params.priority is a
+     *  Priority name, same trust level as Priority.valueOf in quickAdd(). */
+    def updatePriority(Long id) {
+        taskService.updatePriority(id, Priority.valueOf(params.priority))
+        render template: 'list', model: [tasks: taskService.openTasksSorted(),
+            urgencyService: urgencyService, today: LocalDate.now(), users: User.list(),
+            projects: Project.list(), selectedProject: null]
+    }
+
     /** Reachable from the recurrence form in _card.gsp's "🔁 Wiederholung"
      *  details section. params.type is a RecurrenceType name (the <select>
      *  only ever emits a valid one, same trust level as Priority.valueOf in

@@ -20,6 +20,10 @@ body {
 
 #task-list { padding: 0 16px 16px; }
 
+#quick-add { display: flex; align-items: center; gap: 8px; padding: 0 16px 16px; }
+#quick-add input[type="text"] { flex: 1; min-width: 0; }
+#quick-add select { flex: 0 0 auto; max-width: 40%; }
+
 .bucket-label { font-size: 12px; font-weight: 700; letter-spacing: 1.5px;
     text-transform: uppercase; color: var(--color-text-muted); margin: 16px 0 8px; }
 
@@ -52,6 +56,15 @@ body {
 }
 .project-select { text-align: left; }
 .assignee-select { text-align: center; background: var(--color-pill-bg); color: var(--color-pill-text); }
+
+.date-select, .priority-select {
+    appearance: none; -webkit-appearance: none; -moz-appearance: none;
+    border: none; border-radius: 999px; padding: 4px 8px; font-size: 11px;
+    font-family: 'Inter', system-ui, sans-serif; cursor: pointer;
+    width: 100%; box-sizing: border-box; text-align: center;
+    background: var(--color-pill-bg); color: var(--color-pill-text);
+    color-scheme: light dark;
+}
 
 .round-btn { border-radius: 50%; border: none; background: var(--color-text);
     color: var(--color-bg); font-size: 20px; width: 44px; height: 44px;

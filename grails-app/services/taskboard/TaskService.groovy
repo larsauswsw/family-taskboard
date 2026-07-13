@@ -143,6 +143,24 @@ class TaskService {
         t
     }
 
+    /** Same defensive pattern as assignTask()/assignProject(). */
+    Task updateDueDate(Long taskId, LocalDate dueDate) {
+        def t = Task.get(taskId)
+        if (!t) return null
+        t.dueDate = dueDate
+        t.save(failOnError: true)
+        t
+    }
+
+    /** Same defensive pattern as assignTask()/assignProject()/updateDueDate(). */
+    Task updatePriority(Long taskId, Priority priority) {
+        def t = Task.get(taskId)
+        if (!t) return null
+        t.priority = priority
+        t.save(failOnError: true)
+        t
+    }
+
     /** Creates a brand-new RecurrenceRule for the given task -- always a fresh
      *  row, never reviving a previous, now-stopped rule (see design spec §4).
      *  Returns null for an unknown task id or invalid rule input (interval < 1,

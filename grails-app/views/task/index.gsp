@@ -36,6 +36,15 @@
         const m = document.cookie.match(/XSRF-TOKEN=([^;]+)/);
         if (m) e.detail.headers['X-XSRF-TOKEN'] = decodeURIComponent(m[1]);
     });
+
+    // hx-target/hx-swap on #quick-add only replace #task-list, so the form
+    // itself (and its title input) is never touched by the swap -- clear
+    // it manually once the add succeeds.
+    document.getElementById('quick-add').addEventListener('htmx:afterRequest', (e) => {
+        if (e.detail.successful) {
+            document.getElementById('title-input').value = '';
+        }
+    });
     </script>
     <asset:javascript src="voice.js"/>
     <asset:javascript src="push.js"/>

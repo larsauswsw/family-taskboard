@@ -145,6 +145,47 @@ class TaskServiceIntegrationSpec extends Specification {
         taskService.assignProject(-1L, project) == null
     }
 
+    void "updateDueDate changes the task's due date"() {
+        given:
+        def u = new User(username: "due-u1", password: "p",
+            displayName: "U", apiToken: "dueu1").save(flush: true)
+        def t = taskService.createTask([title: "x",
+            dueDate: LocalDate.now(), priority: Priority.LOW], u)
+        LocalDate newDate = LocalDate.now().plusDays(5)
+
+        when:
+        def result = taskService.updateDueDate(t.id, newDate)
+
+        then:
+        result.dueDate == newDate
+        Task.get(t.id).dueDate == newDate
+    }
+
+    void "updateDueDate returns null instead of throwing for an id that no longer exists"() {
+        expect:
+        taskService.updateDueDate(-1L, LocalDate.now()) == null
+    }
+
+    void "updatePriority changes the task's priority"() {
+        given:
+        def u = new User(username: "prio-u1", password: "p",
+            displayName: "U", apiToken: "priou1").save(flush: true)
+        def t = taskService.createTask([title: "x",
+            dueDate: LocalDate.now(), priority: Priority.LOW], u)
+
+        when:
+        def result = taskService.updatePriority(t.id, Priority.CRITICAL)
+
+        then:
+        result.priority == Priority.CRITICAL
+        Task.get(t.id).priority == Priority.CRITICAL
+    }
+
+    void "updatePriority returns null instead of throwing for an id that no longer exists"() {
+        expect:
+        taskService.updatePriority(-1L, Priority.HIGH) == null
+    }
+
     void "createTask with no explicit dueDate parses a date phrase from the title"() {
         given:
         def u = new User(username: "date-u1", password: "p",
