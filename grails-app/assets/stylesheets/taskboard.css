@@ -76,14 +76,15 @@ body {
 .project-pill.active { background: var(--color-pill-active-bg);
     color: var(--color-pill-active-text); font-weight: bold; }
 
-input[type="text"], input[type="number"], input[type="password"], select {
+input[type="text"], input[type="number"], input[type="password"], input[type="email"], select {
     border-radius: 8px; border: 1px solid var(--color-pill-bg);
     background: var(--color-surface); color: var(--color-text); padding: 8px 12px;
-    font-family: 'Inter', system-ui, sans-serif;
+    font-family: 'Inter', system-ui, sans-serif; box-sizing: border-box;
 }
 button[type="submit"] {
     border-radius: 8px; border: none; background: var(--color-text);
     color: var(--color-bg); padding: 8px 16px; font-family: 'Inter', system-ui, sans-serif;
+    cursor: pointer;
 }
 
 .recur-icon-inline { vertical-align: -2px; margin-right: 4px; }
@@ -110,3 +111,25 @@ button[type="submit"] {
 .login-submit { border-radius: 8px; border: none; background: var(--color-text);
     color: var(--color-bg); padding: 11px; font-family: 'Inter', system-ui, sans-serif;
     margin-top: 6px; cursor: pointer; }
+
+/* Project/user management (list + create/edit forms) */
+.project-list { list-style: none; margin: 0 0 20px; padding: 0;
+    display: flex; flex-direction: column; gap: 10px; }
+.project-list li { background: var(--color-surface); border-radius: 12px;
+    box-shadow: var(--shadow-card); padding: 14px 16px;
+    display: flex; flex-direction: column; gap: 10px; }
+.project-list form { display: flex; flex-direction: column; gap: 10px; }
+.project-error { color: var(--color-urgency-red); font-size: 13px; margin: 4px 0 16px; }
+.manage-create-form { display: flex; flex-direction: column; gap: 10px; margin-top: 4px; }
+.field-row { display: flex; gap: 8px; flex-wrap: wrap; }
+.field-row input { flex: 1; min-width: 130px; }
+.checkbox-field { display: flex; align-items: center; gap: 8px;
+    font-size: 13px; color: var(--color-text-muted); cursor: pointer; }
+.checkbox-field input { width: auto; }
+.member-row-actions { display: flex; gap: 8px; }
+.btn-danger-outline { border-radius: 8px; border: 1px solid var(--color-urgency-red);
+    background: transparent; color: var(--color-urgency-red); padding: 8px 14px;
+    font-family: 'Inter', system-ui, sans-serif; cursor: pointer; }
+.btn-danger-outline:disabled { opacity: .4; cursor: not-allowed; }
+.section-heading { font-size: 13px; font-weight: 700; letter-spacing: .5px;
+    text-transform: uppercase; color: var(--color-text-muted); margin: 20px 0 10px; }

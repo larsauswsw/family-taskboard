@@ -85,9 +85,11 @@ class UserServiceIntegrationSpec extends Specification {
 
     void "createUser saves a new family member with an encoded password"() {
         when:
-        def created = userService.createUser("newkid", "family-pw", "New Kid", "kid@example.com", false)
+        String error = userService.createUser("newkid", "family-pw", "New Kid", "kid@example.com", false)
+        def created = User.findByUsername("newkid")
 
         then:
+        error == null
         created != null
         created.admin == false
         passwordEncoder.matches("family-pw", created.password)
@@ -99,12 +101,24 @@ class UserServiceIntegrationSpec extends Specification {
         new User(username: "dup", password: "p", displayName: "D", apiToken: "dup-t").save(flush: true)
 
         expect:
-        userService.createUser("dup", "family-pw", "Dup2", null, false) == null
+        userService.createUser("dup", "family-pw", "Dup2", null, false) == 'Benutzername bereits vergeben.'
     }
 
     void "createUser fails for a too-short password"() {
         expect:
-        userService.createUser("shortpw", "1234567", "Short", null, false) == null
+        userService.createUser("shortpw", "1234567", "Short", null, false) ==
+            'Passwort muss mindestens 8 Zeichen lang sein.'
+    }
+
+    void "createUser fails for a blank display name"() {
+        expect:
+        userService.createUser("blankname", "family-pw", "", null, false) == 'Anzeigename darf nicht leer sein.'
+    }
+
+    void "createUser fails for an invalid email"() {
+        expect:
+        userService.createUser("bademail", "family-pw", "Bad Email", "not-an-email", false) ==
+            'E-Mail-Adresse ist ungültig.'
     }
 
     void "updateUser changes profile fields and admin flag without touching the password when newPassword is blank"() {
@@ -114,13 +128,15 @@ class UserServiceIntegrationSpec extends Specification {
             displayName: "Old Name", apiToken: "upd-t1").save(flush: true)
 
         when:
-        def result = userService.updateUser(u.id, "New Name", "new@example.com", true, "")
+        String error = userService.updateUser(u.id, "New Name", "new@example.com", true, "")
+        def result = User.get(u.id)
 
         then:
+        error == null
         result.displayName == "New Name"
         result.email == "new@example.com"
         result.admin == true
-        User.get(u.id).password == originalPassword
+        result.password == originalPassword
     }
 
     void "updateUser resets the password when newPassword is provided"() {
@@ -133,6 +149,18 @@ class UserServiceIntegrationSpec extends Specification {
 
         then:
         passwordEncoder.matches("brand-new-pw", User.get(u.id).password)
+    }
+
+    void "updateUser fails for a too-short new password without touching the existing one"() {
+        given:
+        String originalPassword = passwordEncoder.encode("keep-me")
+        def u = new User(username: "upd-u3", password: originalPassword,
+            displayName: "U", apiToken: "upd-t3").save(flush: true)
+
+        expect:
+        userService.updateUser(u.id, "U", null, false, "short") ==
+            'Neues Passwort muss mindestens 8 Zeichen lang sein.'
+        User.get(u.id).password == originalPassword
     }
 
     void "deleteUser refuses to delete the acting user's own account"() {

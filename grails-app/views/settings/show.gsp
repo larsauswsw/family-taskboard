@@ -21,23 +21,23 @@
             <button type="submit">Token neu generieren</button>
         </form>
 
-        <h2>Passwort ändern</h2>
+        <h2 class="section-heading">Passwort ändern</h2>
         <g:if test="${flash.passwordError}">
-            <p class="login-error">${flash.passwordError}</p>
+            <p class="project-error">${flash.passwordError}</p>
         </g:if>
         <g:if test="${flash.passwordSuccess}">
             <p>${flash.passwordSuccess}</p>
         </g:if>
-        <form method="post" action="${createLink(action: 'changePassword')}">
+        <form method="post" action="${createLink(action: 'changePassword')}" class="manage-create-form">
             <input type="hidden" name="${_csrf.parameterName}" value="${_csrf.token}">
-            <input type="password" name="currentPassword" placeholder="Aktuelles Passwort" required><br>
-            <input type="password" name="newPassword" placeholder="Neues Passwort (mind. 8 Zeichen)" required><br>
-            <input type="password" name="newPasswordConfirm" placeholder="Neues Passwort bestätigen" required><br>
+            <input type="password" name="currentPassword" placeholder="Aktuelles Passwort" required>
+            <input type="password" name="newPassword" placeholder="Neues Passwort (mind. 8 Zeichen)" required>
+            <input type="password" name="newPasswordConfirm" placeholder="Neues Passwort bestätigen" required>
             <button type="submit">Passwort ändern</button>
         </form>
 
         <g:if test="${user.admin}">
-            <h2>Familie</h2>
+            <h2 class="section-heading">Familie</h2>
             <a href="${createLink(controller: 'userManagement')}">Nutzerverwaltung</a>
         </g:if>
     </main>

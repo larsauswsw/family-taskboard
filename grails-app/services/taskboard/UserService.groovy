@@ -48,31 +48,52 @@ class UserService {
     }
 
     /** Creates a new family member with an admin-chosen initial password.
-     *  Returns the saved User, or null if validation failed (e.g. duplicate
-     *  username) -- same null-on-failure convention as ProjectService. */
-    User createUser(String username, String password, String displayName, String email, boolean admin) {
-        if (!password || password.length() < 8) return null
+     *  Returns null on success, or a specific German validation-failure
+     *  message (duplicate username, blank field, too-short password, ...)
+     *  otherwise -- same convention as changeOwnPassword, so the controller
+     *  can show the actual reason instead of a generic catch-all. */
+    String createUser(String username, String password, String displayName, String email, boolean admin) {
+        if (!password || password.length() < 8) return 'Passwort muss mindestens 8 Zeichen lang sein.'
         def u = new User(username: username, password: passwordEncoder.encode(password),
             displayName: displayName, email: email ?: null, admin: admin,
             apiToken: UUID.randomUUID().toString())
-        u.save() ? u : null
+        u.save() ? null : describeValidationError(u.errors)
     }
 
     /** Updates profile fields and admin flag; only resets the password when
      *  newPassword is non-blank, so leaving it empty in the edit form keeps
-     *  the existing password. Returns the updated User, or null if the user
-     *  doesn't exist or validation failed. */
-    User updateUser(Long id, String displayName, String email, boolean admin, String newPassword) {
+     *  the existing password. Returns null on success, or a specific German
+     *  validation-failure message otherwise (same convention as createUser). */
+    String updateUser(Long id, String displayName, String email, boolean admin, String newPassword) {
         def u = User.get(id)
-        if (!u) return null
+        if (!u) return 'Nutzer wurde nicht gefunden.'
+        if (newPassword && newPassword.length() < 8) {
+            return 'Neues Passwort muss mindestens 8 Zeichen lang sein.'
+        }
         u.displayName = displayName
         u.email = email ?: null
         u.admin = admin
         if (newPassword) {
-            if (newPassword.length() < 8) return null
             u.password = passwordEncoder.encode(newPassword)
         }
-        u.save() ? u : null
+        u.save() ? null : describeValidationError(u.errors)
+    }
+
+    /** Maps the first GORM field-validation failure to a specific German
+     *  message. Field/code pairs verified against User's constraints
+     *  (username unique+blank, displayName blank, email format). */
+    private static String describeValidationError(errors) {
+        def fieldError = errors.fieldErrors[0]
+        switch (fieldError?.field) {
+            case 'username':
+                return fieldError.code == 'unique' ? 'Benutzername bereits vergeben.' : 'Benutzername darf nicht leer sein.'
+            case 'displayName':
+                return 'Anzeigename darf nicht leer sein.'
+            case 'email':
+                return 'E-Mail-Adresse ist ungültig.'
+            default:
+                return 'Ungültige Angaben.'
+        }
     }
 
     /** Deletes a family member, refusing to remove the last remaining admin

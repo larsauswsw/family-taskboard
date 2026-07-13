@@ -25,17 +25,17 @@ class UserManagementController {
     }
 
     def create() {
-        def result = userService.createUser(params.username, params.password, params.displayName,
+        String error = userService.createUser(params.username, params.password, params.displayName,
             params.email, params.admin == 'true')
         render template: 'manage', model: [users: User.list(sort: 'username'), currentUserId: currentUser().id,
-            error: result ? null : 'Ungültige Angaben oder Benutzername bereits vergeben (Passwort mind. 8 Zeichen).']
+            error: error]
     }
 
     def update(Long id) {
-        def result = userService.updateUser(id, params.displayName, params.email,
+        String error = userService.updateUser(id, params.displayName, params.email,
             params.admin == 'true', params.newPassword)
         render template: 'manage', model: [users: User.list(sort: 'username'), currentUserId: currentUser().id,
-            error: result ? null : 'Ungültige Angaben (neues Passwort mind. 8 Zeichen, falls gesetzt).']
+            error: error]
     }
 
     def delete(Long id) {

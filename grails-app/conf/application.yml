@@ -10,6 +10,14 @@ grails:
     profile: web
 
 ---
+# Prod runs behind Nginx Proxy Manager, which terminates TLS and forwards
+# plain HTTP to this app (see docker-compose.prod.yml). Without this, Spring
+# Boot ignores the X-Forwarded-Proto/-Port headers NPM sends, so any
+# redirect() (e.g. after changing the password) is built from the backend's
+# own scheme/port instead of the proxy's -- producing broken links like
+# https://host:80/... Harmless locally, where there's no proxy in front.
+server:
+    forward-headers-strategy: framework
 grails:
     mime:
         types:
