@@ -145,7 +145,8 @@ class UserServiceIntegrationSpec extends Specification {
     }
 
     void "deleteUser refuses to delete the last remaining admin"() {
-        given:
+        given: "no other admin exists -- demote the seeded 'lars' account so this admin really is the last one"
+        User.findAllByAdmin(true).each { it.admin = false; it.save(flush: true) }
         def admin = new User(username: "sole-admin", password: "p", displayName: "A",
             apiToken: "sa-t", admin: true).save(flush: true)
         def other = new User(username: "other-u", password: "p", displayName: "O", apiToken: "ou-t").save(flush: true)
