@@ -58,7 +58,7 @@
 
         <g:if test="${user.admin}">
             <h2 class="section-heading">Familie</h2>
-            <a href="${createLink(controller: 'userManagement')}">Nutzerverwaltung</a>
+            <a href="${createLink(controller: 'userManagement')}" class="btn-solid">Nutzerverwaltung</a>
         </g:if>
     </main>
 </body>
