@@ -5,9 +5,9 @@ This guide shows how to set up Apple Shortcuts to quickly add tasks to Taskboard
 ## Overview
 
 The Apple Shortcut automates the following workflow:
-1. **Dictate Text**: Capture a voice input or text
-2. **POST to /api/tasks/quick**: Send the text to Taskboard with Bearer token authentication
-3. **Show Result**: Display the created task confirmation
+1. **Dictate Text** (German Shortcuts app: *Text diktieren*): Capture a voice input or text
+2. **POST to /api/tasks/quick** (*Inhalte von URL abrufen*): Send the text to Taskboard with Bearer token authentication
+3. **Show Result** (*Ergebnis anzeigen*): Display the created task confirmation
 
 ## Setup Steps
 
@@ -21,23 +21,23 @@ errors until you paste in the new one.
 
 ### 2. Create the Shortcut
 
-1. Open the **Shortcuts** app on your Mac or iOS device
+1. Open the **Shortcuts** app (*Kurzbefehle*) on your Mac or iOS device
 2. Create a New Shortcut
 3. Add these actions in order:
 
-#### Action 1: Dictate Text
-- **Type**: "Dictate Text"
-- **Settings**: Leave defaults (captures voice or allows text entry)
+#### Action 1: Dictate Text (*Text diktieren*)
+- **Type**: "Dictate Text" (*Text diktieren*)
+- **Settings** (*Einstellungen*): Leave defaults (captures voice or allows text entry)
 
-#### Action 2: Get Contents of URL
-- **Type**: "Get Contents of URL"
+#### Action 2: Get Contents of URL (*Inhalte von URL abrufen*)
+- **Type**: "Get Contents of URL" (*Inhalte von URL abrufen*)
 - **URL**: `https://your-domain.com/api/tasks/quick` (replace `your-domain.com` with your Taskboard server)
-- **Method**: `POST`
-- **Headers**:
-  - Key: `Authorization`
-  - Value: `Bearer YOUR_API_TOKEN` (paste your API token from step 1)
-- **Request Body**:
-  - Type: `Form Data` or `JSON`
+- **Method** (*Methode*): `POST`
+- **Headers** (*Kopfzeilen*):
+  - Key (*Schlüssel*): `Authorization`
+  - Value (*Wert*): `Bearer YOUR_API_TOKEN` (paste your API token from step 1)
+- **Request Body** (*Anfrage*):
+  - Type (*Anfragetext*): `Form Data` (*Formular*) or `JSON`
   - JSON Body:
     ```json
     {
@@ -45,44 +45,44 @@ errors until you paste in the new one.
     }
     ```
 
-#### Action 3: Show Result
-- **Type**: "Show Result"
-- **Input**: [Response from previous step]
+#### Action 3: Show Result (*Ergebnis anzeigen*)
+- **Type**: "Show Result" (*Ergebnis anzeigen*)
+- **Input** (*Eingabe*): [Response from previous step]
 - Displays the created task details (ID, title, due date)
 
 ## Assign to Siri, Back Tap, or Action Button
 
 ### Via Siri Phrase
-1. In Shortcuts, find your shortcut
+1. In Shortcuts (*Kurzbefehle*), find your shortcut
 2. Tap the `•••` menu
-3. **Add to Siri** → Set a voice phrase like "Add task to Taskboard"
-4. Confirm and tap **Done**
+3. **Add to Siri** (*Zu Siri hinzufügen*) → Set a voice phrase like "Add task to Taskboard"
+4. Confirm and tap **Done** (*Fertig*)
 5. Now say "Hey Siri, Add task to Taskboard" to use it
 
-### Via Back Tap (iPhone/iPad)
-1. Go to **Settings** → **Accessibility** → **Touch**
-2. Select **Back Tap**
-3. Choose a tap pattern (double or triple tap)
+### Via Back Tap (iPhone/iPad) — *Auf Rückseite tippen*
+1. Go to **Settings** (*Einstellungen*) → **Accessibility** (*Bedienungshilfen*) → **Touch** (*Tippen*)
+2. Select **Back Tap** (*Auf Rückseite tippen*)
+3. Choose a tap pattern (double or triple tap) (*Doppeltippen*/*Dreifach tippen*)
 4. Assign your Taskboard shortcut
 5. Double or triple tap the back of your device to trigger the shortcut
 
-### Via Action Button (iPhone 15 Pro)
-1. Go to **Settings** → **Action Button**
+### Via Action Button (iPhone 15 Pro) — *Action-Taste*
+1. Go to **Settings** (*Einstellungen*) → **Action Button** (*Action-Taste*)
 2. Select your shortcut
 3. Press and hold the Action Button to activate
 
-### Via Lock Screen Widget
-1. Long-press your Lock Screen
-2. Tap **Customize**
-3. Add a **Shortcuts** widget
+### Via Lock Screen Widget — *Sperrbildschirm-Widget*
+1. Long-press your Lock Screen (*Sperrbildschirm*)
+2. Tap **Customize** (*Anpassen*)
+3. Add a **Shortcuts** (*Kurzbefehle*) widget
 4. Configure it to show your Taskboard shortcut
 5. Tap the widget on Lock Screen to run it
 
 ## Sync via iCloud
 
 All shortcuts sync automatically to your Apple Watch via iCloud if enabled:
-1. Ensure **iCloud Drive** is enabled in **Settings** → **[Your Name]** → **iCloud**
-2. The shortcut appears in the Shortcuts app on your Watch
+1. Ensure **iCloud Drive** is enabled in **Settings** (*Einstellungen*) → **[Your Name]** (*[Dein Name]*) → **iCloud**
+2. The shortcut appears in the Shortcuts app (*Kurzbefehle*-App) on your Watch
 3. Tap it to add a task with voice input from your Watch
 
 ## Error Handling
