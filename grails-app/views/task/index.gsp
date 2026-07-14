@@ -16,6 +16,12 @@
         <button type="button" id="ios-push-hint-close" aria-label="Hinweis schließen">×</button>
     </div>
 
+    <div id="push-permission-hint" class="install-hint" hidden>
+        <span>Benachrichtigungen für Erinnerungen aktivieren?</span>
+        <button type="button" id="push-permission-hint-action" class="install-hint-action">Aktivieren</button>
+        <button type="button" id="push-permission-hint-close" aria-label="Hinweis schließen">×</button>
+    </div>
+
     <main id="task-list">
         <g:render template="list"
             model="[tasks: tasks, urgencyService: urgencyService, today: today, users: users, projects: projects, selectedProject: selectedProject]"/>

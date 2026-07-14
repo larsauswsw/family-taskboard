@@ -10,16 +10,16 @@
     return window.matchMedia('(display-mode: standalone)').matches || navigator.standalone === true;
   }
 
-  const hint = document.getElementById('ios-push-hint');
+  const iosHint = document.getElementById('ios-push-hint');
   document.getElementById('ios-push-hint-close')?.addEventListener('click', () => {
-    hint.hidden = true;
+    iosHint.hidden = true;
     localStorage.setItem('taskboard-ios-push-hint-dismissed', 'true');
   });
 
   if (!('serviceWorker' in navigator) || !('PushManager' in window)) {
-    if (hint && isIOS() && !isStandalone() &&
+    if (iosHint && isIOS() && !isStandalone() &&
         localStorage.getItem('taskboard-ios-push-hint-dismissed') !== 'true') {
-      hint.hidden = false;
+      iosHint.hidden = false;
     }
     return;
   }
@@ -41,20 +41,51 @@
     return m ? decodeURIComponent(m[1]) : null;
   }
 
-  navigator.serviceWorker.register('/sw.js').then(async function (reg) {
-    const res = await fetch('/push/key');
-    const { publicKey } = await res.json();
-    if (!publicKey) return;
-    const perm = await Notification.requestPermission();
-    if (perm !== 'granted') return;
+  async function subscribeAndSend(reg, publicKey) {
     const sub = await reg.pushManager.subscribe({
       userVisibleOnly: true,
       applicationServerKey: urlBase64ToUint8Array(publicKey)
     });
-    await fetch('/push/subscribe', {
+    const res = await fetch('/push/subscribe', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json', 'X-XSRF-TOKEN': getCsrfToken() },
       body: JSON.stringify(sub)
     });
+    if (!res.ok) throw new Error('Abo speichern fehlgeschlagen (HTTP ' + res.status + ')');
+  }
+
+  const permHint = document.getElementById('push-permission-hint');
+  document.getElementById('push-permission-hint-close')?.addEventListener('click', () => {
+    permHint.hidden = true;
+    localStorage.setItem('taskboard-push-hint-dismissed', 'true');
+  });
+
+  navigator.serviceWorker.register('/sw.js').then(async function (reg) {
+    const res = await fetch('/push/key');
+    const { publicKey } = await res.json();
+    if (!publicKey) return; // no VAPID keypair configured server-side
+
+    if (Notification.permission === 'granted') {
+      await subscribeAndSend(reg, publicKey);
+      return;
+    }
+    if (Notification.permission === 'denied') return; // JS can't re-prompt; only iOS Settings can
+
+    // Safari (desktop and iOS) only shows the native permission dialog when
+    // Notification.requestPermission() is called synchronously from a user
+    // gesture -- calling it automatically on page load is silently ignored,
+    // no prompt and no error. Ask via a button tap instead.
+    if (permHint && localStorage.getItem('taskboard-push-hint-dismissed') !== 'true') {
+      permHint.hidden = false;
+      document.getElementById('push-permission-hint-action').addEventListener('click', async function () {
+        permHint.hidden = true;
+        const perm = await Notification.requestPermission();
+        if (perm === 'granted') {
+          await subscribeAndSend(reg, publicKey);
+        }
+      }, { once: true });
+    }
+  }).catch(function (err) {
+    console.error('Push-Setup fehlgeschlagen:', err);
   });
 })();
