@@ -1,5 +1,28 @@
 (function () {
-  if (!('serviceWorker' in navigator) || !('PushManager' in window)) return;
+  // iOS Safari only exposes the Push API to a web app added to the Home
+  // Screen ("Zum Home-Bildschirm hinzufügen") -- a regular Safari tab has no
+  // PushManager at all, so the code below would otherwise bail out silently
+  // with zero feedback. Point iPhone/iPad users at the fix instead.
+  function isIOS() {
+    return /iphone|ipad|ipod/i.test(navigator.userAgent) && !window.MSStream;
+  }
+  function isStandalone() {
+    return window.matchMedia('(display-mode: standalone)').matches || navigator.standalone === true;
+  }
+
+  const hint = document.getElementById('ios-push-hint');
+  document.getElementById('ios-push-hint-close')?.addEventListener('click', () => {
+    hint.hidden = true;
+    localStorage.setItem('taskboard-ios-push-hint-dismissed', 'true');
+  });
+
+  if (!('serviceWorker' in navigator) || !('PushManager' in window)) {
+    if (hint && isIOS() && !isStandalone() &&
+        localStorage.getItem('taskboard-ios-push-hint-dismissed') !== 'true') {
+      hint.hidden = false;
+    }
+    return;
+  }
 
   function urlBase64ToUint8Array(base64) {
     const padding = '='.repeat((4 - base64.length % 4) % 4);

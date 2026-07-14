@@ -11,6 +11,11 @@
 <body>
     <g:render template="/common/navbar" model="[title: 'Meine Tasks', linkHome: false]"/>
 
+    <div id="ios-push-hint" class="install-hint" hidden>
+        <span>Für Erinnerungen: Zum Home-Bildschirm hinzufügen (Teilen-Symbol → „Zum Home-Bildschirm")</span>
+        <button type="button" id="ios-push-hint-close" aria-label="Hinweis schließen">×</button>
+    </div>
+
     <main id="task-list">
         <g:render template="list"
             model="[tasks: tasks, urgencyService: urgencyService, today: today, users: users, projects: projects, selectedProject: selectedProject]"/>

@@ -20,6 +20,13 @@ body {
 
 #task-list { padding: 0 16px 16px; }
 
+.install-hint { display: flex; align-items: center; justify-content: space-between; gap: 12px;
+    margin: 0 16px 16px; padding: 10px 14px; border-radius: 10px;
+    background: var(--color-pill-bg); color: var(--color-pill-text); font-size: 13px; }
+.install-hint[hidden] { display: none; }
+.install-hint button { background: none; border: none; color: inherit; font-size: 18px;
+    line-height: 1; cursor: pointer; padding: 0 2px; }
+
 #quick-add { display: flex; align-items: center; gap: 8px; padding: 0 16px 16px; }
 #quick-add input[type="text"] { flex: 1; min-width: 0; }
 #quick-add select { flex: 0 0 auto; max-width: 40%; }

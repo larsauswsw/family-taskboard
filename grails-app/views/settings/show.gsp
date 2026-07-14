@@ -36,6 +36,26 @@
             <button type="submit">Passwort ändern</button>
         </form>
 
+        <h2 class="section-heading">Erinnerungen</h2>
+        <g:if test="${flash.notificationError}">
+            <p class="project-error">${flash.notificationError}</p>
+        </g:if>
+        <g:if test="${flash.notificationSuccess}">
+            <p>${flash.notificationSuccess}</p>
+        </g:if>
+        <form method="post" action="${createLink(action: 'updateNotificationPrefs')}" class="manage-create-form">
+            <input type="hidden" name="${_csrf.parameterName}" value="${_csrf.token}">
+            <label class="checkbox-field">
+                <input type="checkbox" name="notifyOnDueDate" value="true" ${user.notifyOnDueDate ? 'checked' : ''}>
+                Erinnerung an Fälligkeitstermine
+            </label>
+            <label>
+                Tage im Voraus:
+                <input type="number" name="notifyDaysBefore" value="${user.notifyDaysBefore}" min="0" max="30">
+            </label>
+            <button type="submit">Speichern</button>
+        </form>
+
         <g:if test="${user.admin}">
             <h2 class="section-heading">Familie</h2>
             <a href="${createLink(controller: 'userManagement')}">Nutzerverwaltung</a>

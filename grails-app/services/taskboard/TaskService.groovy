@@ -100,10 +100,10 @@ class TaskService {
     /** Selects assigned, not-yet-done tasks whose due date falls within the assignee's
      *  notifyDaysBefore window and that haven't already been notified about today
      *  (lastNotifiedAt is compared by calendar date so the hourly job can run repeatedly
-     *  per day without re-sending). */
+     *  per day without re-sending). Skips assignees who opted out via notifyOnDueDate. */
     List<Task> tasksNeedingReminder(LocalDate today) {
         Task.findAllByStatusNotEqual(TaskStatus.DONE).findAll { Task t ->
-            if (!t.assignedTo) return false
+            if (!t.assignedTo || !t.assignedTo.notifyOnDueDate) return false
             long daysOut = java.time.temporal.ChronoUnit.DAYS.between(today, t.dueDate)
             boolean inWindow = daysOut >= 0 && daysOut <= (t.assignedTo.notifyDaysBefore ?: 1)
             boolean notNotifiedToday = t.lastNotifiedAt == null ||

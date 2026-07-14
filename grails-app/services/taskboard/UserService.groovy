@@ -47,6 +47,19 @@ class UserService {
         null
     }
 
+    /** Updates the user's own due-date reminder preferences (see
+     *  TaskService.tasksNeedingReminder). Returns null on success, or an
+     *  error message if notifyDaysBefore is out of range. */
+    String updateNotificationPrefs(User user, boolean notifyOnDueDate, Integer notifyDaysBefore) {
+        if (notifyDaysBefore == null || notifyDaysBefore < 0 || notifyDaysBefore > 30) {
+            return 'Tage im Voraus muss zwischen 0 und 30 liegen.'
+        }
+        user.notifyOnDueDate = notifyOnDueDate
+        user.notifyDaysBefore = notifyDaysBefore
+        user.save(failOnError: true)
+        null
+    }
+
     /** Creates a new family member with an admin-chosen initial password.
      *  Returns null on success, or a specific German validation-failure
      *  message (duplicate username, blank field, too-short password, ...)

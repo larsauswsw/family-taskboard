@@ -28,6 +28,22 @@ class ReminderIntegrationSpec extends Specification {
         toNotify*.id.contains(due.id)
     }
 
+    void "a task assigned to a user who opted out of due-date reminders is not selected"() {
+        given:
+        def u = new User(username: "n2", password: "p", displayName: "N2",
+            apiToken: "nt2", notifyDaysBefore: 1, notifyOnDueDate: false).save(flush: true)
+        def due = taskService.createTask([title: "morgen",
+            dueDate: LocalDate.now().plusDays(1), priority: Priority.LOW], u)
+        due.assignedTo = u
+        due.save(flush: true)
+
+        when:
+        def toNotify = taskService.tasksNeedingReminder(LocalDate.now())
+
+        then:
+        !toNotify*.id.contains(due.id)
+    }
+
     void "completing a task notifies the creator"() {
         given:
         def creator = new User(username: "c", password: "p", displayName: "C",

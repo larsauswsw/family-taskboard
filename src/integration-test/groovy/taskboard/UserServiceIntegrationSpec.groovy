@@ -83,6 +83,30 @@ class UserServiceIntegrationSpec extends Specification {
         passwordEncoder.matches("new-password", User.get(u.id).password)
     }
 
+    void "updateNotificationPrefs updates notifyOnDueDate and notifyDaysBefore"() {
+        given:
+        def u = new User(username: "notif-u1", password: "p",
+            displayName: "U", apiToken: "notif-t1").save(flush: true)
+
+        when:
+        String error = userService.updateNotificationPrefs(u, false, 3)
+
+        then:
+        error == null
+        User.get(u.id).notifyOnDueDate == false
+        User.get(u.id).notifyDaysBefore == 3
+    }
+
+    void "updateNotificationPrefs rejects an out-of-range notifyDaysBefore"() {
+        given:
+        def u = new User(username: "notif-u2", password: "p",
+            displayName: "U", apiToken: "notif-t2", notifyDaysBefore: 1).save(flush: true)
+
+        expect:
+        userService.updateNotificationPrefs(u, true, 31) == 'Tage im Voraus muss zwischen 0 und 30 liegen.'
+        User.get(u.id).notifyDaysBefore == 1
+    }
+
     void "createUser saves a new family member with an encoded password"() {
         when:
         String error = userService.createUser("newkid", "family-pw", "New Kid", "kid@example.com", false)

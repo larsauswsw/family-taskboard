@@ -42,4 +42,20 @@ class SettingsController {
         }
         redirect action: 'show'
     }
+
+    /** Redirect-after-POST, same reasoning as changePassword(). notifyDaysBefore
+     *  is parsed defensively -- a blank/non-numeric value becomes null, which
+     *  updateNotificationPrefs() rejects with a proper error rather than a
+     *  NumberFormatException. */
+    def updateNotificationPrefs() {
+        Integer days = params.notifyDaysBefore?.isInteger() ? params.notifyDaysBefore as Integer : null
+        String error = userService.updateNotificationPrefs(currentUser(),
+            params.notifyOnDueDate == 'true', days)
+        if (error) {
+            flash.notificationError = error
+        } else {
+            flash.notificationSuccess = 'Gespeichert.'
+        }
+        redirect action: 'show'
+    }
 }
