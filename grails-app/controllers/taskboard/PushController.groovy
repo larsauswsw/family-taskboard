@@ -27,12 +27,7 @@ class PushController {
 
     def subscribe() {
         def body = request.JSON
-        def user = currentUser()
-        if (!PushSubscription.findByEndpoint(body.endpoint)) {
-            new PushSubscription(endpoint: body.endpoint,
-                p256dh: body.keys.p256dh, auth: body.keys.auth,
-                user: user).save(flush: true)
-        }
+        pushService.saveSubscription(currentUser(), body.endpoint, body.keys.p256dh, body.keys.auth)
         render status: 201, text: '{"ok":true}', contentType: 'application/json'
     }
 }

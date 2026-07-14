@@ -55,10 +55,24 @@
   }
 
   const permHint = document.getElementById('push-permission-hint');
+  const permHintSpan = permHint?.querySelector('span');
   document.getElementById('push-permission-hint-close')?.addEventListener('click', () => {
     permHint.hidden = true;
     localStorage.setItem('taskboard-push-hint-dismissed', 'true');
   });
+
+  // Surfaces success/failure on screen -- there is no console access on a
+  // phone, so this banner (repurposed as a transient status toast) is the
+  // only way to see what happened without a Mac + Safari remote debugging.
+  // Hides the "Aktivieren" button since by the time there's a status to
+  // show, it has already been used (or the flow never needed it).
+  function showStatus(message, autoHideMs) {
+    if (!permHint || !permHintSpan) return;
+    permHintSpan.textContent = message;
+    document.getElementById('push-permission-hint-action')?.setAttribute('hidden', '');
+    permHint.hidden = false;
+    if (autoHideMs) setTimeout(() => { permHint.hidden = true; }, autoHideMs);
+  }
 
   navigator.serviceWorker.register('/sw.js').then(async function (reg) {
     const res = await fetch('/push/key');
@@ -66,7 +80,13 @@
     if (!publicKey) return; // no VAPID keypair configured server-side
 
     if (Notification.permission === 'granted') {
-      await subscribeAndSend(reg, publicKey);
+      try {
+        await subscribeAndSend(reg, publicKey);
+        console.log('Push-Abo gespeichert.');
+      } catch (err) {
+        console.error('Push-Abo fehlgeschlagen:', err);
+        showStatus('Benachrichtigungen: Fehler beim Aktivieren (' + err.message + ')');
+      }
       return;
     }
     if (Notification.permission === 'denied') return; // JS can't re-prompt; only iOS Settings can
@@ -78,14 +98,22 @@
     if (permHint && localStorage.getItem('taskboard-push-hint-dismissed') !== 'true') {
       permHint.hidden = false;
       document.getElementById('push-permission-hint-action').addEventListener('click', async function () {
-        permHint.hidden = true;
-        const perm = await Notification.requestPermission();
-        if (perm === 'granted') {
+        try {
+          const perm = await Notification.requestPermission();
+          if (perm !== 'granted') {
+            showStatus('Benachrichtigungen nicht erlaubt.', 4000);
+            return;
+          }
           await subscribeAndSend(reg, publicKey);
+          showStatus('Benachrichtigungen aktiviert ✓', 4000);
+        } catch (err) {
+          console.error('Push-Abo fehlgeschlagen:', err);
+          showStatus('Fehler beim Aktivieren: ' + err.message, 6000);
         }
       }, { once: true });
     }
   }).catch(function (err) {
     console.error('Push-Setup fehlgeschlagen:', err);
+    showStatus('Push-Setup fehlgeschlagen: ' + err.message, 6000);
   });
 })();

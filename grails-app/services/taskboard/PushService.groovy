@@ -30,6 +30,19 @@ class PushService {
         grailsApplication.config.getProperty('vapid.publicKey')
     }
 
+    /** Persists a new Web Push subscription for the user, ignoring an endpoint
+     *  that's already registered (e.g. the same device re-subscribing after a
+     *  reload would otherwise violate the unique constraint). Lives here
+     *  rather than in PushController because this class is @Transactional --
+     *  a controller action calling save(flush: true) directly has no open
+     *  transaction and throws TransactionRequiredException. */
+    void saveSubscription(User user, String endpoint, String p256dh, String auth) {
+        if (!PushSubscription.findByEndpoint(endpoint)) {
+            new PushSubscription(endpoint: endpoint, p256dh: p256dh, auth: auth, user: user)
+                .save(flush: true, failOnError: true)
+        }
+    }
+
     /**
      * Best-effort: callers (TaskService's completion/assignment/reminder notifications)
      * are never supposed to fail because push delivery failed, including when no VAPID
